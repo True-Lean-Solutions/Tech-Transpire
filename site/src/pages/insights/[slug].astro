@@ -10,7 +10,7 @@ import InsightCard from '../../components/InsightCard.astro';
 import { block, team, blocksOf, cards, steps, stats, callout, fitlist, ctas, lines, ICON_KEYS, type Block, type Card } from '../../lib/content';
 import { visibleInsights, visibleById, TYPE_LABEL, type Insight } from '../../lib/insights';
 import { blockingClaims, omittedBlocks } from '../../lib/claims';
-import { isReview } from '../../lib/site';
+import { isReview, pagePath } from '../../lib/site';
 import { asset } from '../../lib/images';
 
 export function getStaticPaths() {
@@ -75,9 +75,9 @@ const jsonLd = [
     datePublished: i.dateIso, dateModified: i.dateIso,
     author: { '@type': 'Person', name: i.author, ...(authorProfile ? { url: authorProfile } : {}) },
     publisher: { '@id': `${site}/#organization`, '@type': 'Organization', name: 'Tech Transpire' },
-    mainEntityOfPage: `${site}/insights/${i.slug}`,
+    mainEntityOfPage: `${site}${pagePath(`/insights/${i.slug}`)}`,
   },
-  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [...crumbs, { label: i.cardTitle, href: `/insights/${i.slug}` }].map((c, n) => ({ '@type': 'ListItem', position: n + 1, name: c.label, item: `${site}${c.href}` })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [...crumbs, { label: i.cardTitle, href: `/insights/${i.slug}` }].map((c, n) => ({ '@type': 'ListItem', position: n + 1, name: c.label, item: `${site}${pagePath(c.href)}` })) },
 ];
 ---
 <Base title={`${i.cardTitle} | Tech Transpire`} description={i.excerpt} ogImage={asset(i.cover)} jsonLd={jsonLd}>

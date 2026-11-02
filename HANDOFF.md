@@ -2,7 +2,7 @@
 
 **If you are a new agent or teammate taking over this project, read this file first.** It is the durable memory for the rebuild and must survive lost conversations. Update it whenever a decision is made, a claim is verified, or a step advances.
 
-Last updated: 2026-10-29 (third working session).
+Last updated: 2026-11-02 (production launch on GitHub Pages, D-50).
 
 ---
 
@@ -27,7 +27,7 @@ Rebuilding **www.techtranspire.com** from scratch: preserve existing content ver
 5. **Photos (D-30):** only labelled original photographs. No AI-generated portraits of real people. Don't introduce Mayank Pujara.
 6. **No pricing** at launch (D-26).
 7. **Secrets** only in server environment variables. **Never show a false form success.**
-8. **No deployment without explicit authorization.** The site is not launch-ready until a real contact submission reaches Zoho CRM and email.
+8. **Deploys need explicit authorization.** Production launch was authorized by Mack Akhani on 2026-11-02 (D-50); `npm run deploy:pages` now publishes the live site.
 9. Drive: use the connected account; never change file sharing (the connector can't undo it). Ask the company to download files.
 10. This repository is **public**.
 
@@ -49,14 +49,14 @@ Rebuilding **www.techtranspire.com** from scratch: preserve existing content ver
 cd site && npm ci                       # Node 22 LTS (.nvmrc)
 npm run dev                             # review site, http://localhost:4321 (no on-page markers)
 npm run dev:markers                     # same, with amber tags + "Review build" strip (REVIEW_MARKERS=1)
-npm run validate                        # both builds + tests + content/gating + links (CI)
+npm run validate                        # review, public and Pages builds + tests + content/gating + links (CI)
 npm run build && npm run preview -- --port 4322
 npm run qa                              # 48 browser checks against :4322
 npm run screenshots                     # 1440/768/390 into docs/phase-2-design/screenshots
-npm run deploy:pages                    # static review preview → gh-pages branch (D-34)
+npm run deploy:pages                    # PRODUCTION: public static build → gh-pages → www.techtranspire.com (D-50)
 ```
 
-**Shareable review preview (D-34):** https://himanshu-1-1.github.io/Tech-Transpire/ (GitHub Pages, `gh-pages` branch). It is the review build (all content, no on-page markers, `noindex`), static, under `/Tech-Transpire/`. It has no server, so the contact form shows its failure message. It does **not** update automatically: run `npm run deploy:pages` after changes. This is not the production launch (05 O-6 still applies).
+**Production (D-50):** https://www.techtranspire.com is served by GitHub Pages from the `gh-pages` branch of True-Lean-Solutions/Tech-Transpire. `npm run deploy:pages` builds the public site (`PAGES=1 SITE_MODE=public`), adds trailing slashes to page links and writes `CNAME` + `.nojekyll` (`scripts/pages-finalize.mjs`), then force-pushes `gh-pages`. Deploy only from an up-to-date `main`. DNS is in the Microsoft 365 admin center: four GitHub A and AAAA records on the apex, `www` CNAME → `true-lean-solutions.github.io`. The contact form posts to the Google Apps Script web app in `apps-script/contact-form.gs` (Google Sheet + email to info@); its `/exec` URL is in `site/src/lib/site.ts`. The github.io review preview (D-34) is retired; use `npm run dev` or `npm run preview` for review.
 The machine used on 2026-10-29 had no system Node; a portable Node 22 from the session scratchpad was used. Install Node 22 LTS for ongoing work.
 
 ## 4. Completed milestones
@@ -97,10 +97,10 @@ D-01 brand statement · D-02 signature offer · D-03 no AI page · D-04 pre-foun
 | Area | Status |
 |---|---|
 | Design and templates | Complete in review. Waiting for photography (3 files) |
-| Public build | 9 pages: Home, Expertise, Transformation Recovery, Insights, 2 articles (006, 008), About, Contact, 404. Industries, Healthcare, Privacy, case studies and 8 articles held |
-| Contact | Works end to end with mocks; shows the honest failure until Zoho/SMTP are configured |
+| Public build | 10 pages: Home, Services, Transformation Recovery, Insights, 2 articles (006, 008), About, Contact, Privacy Policy, 404. Industries, Healthcare, case studies, advisors and 8 articles held |
+| Contact | Production: Google Apps Script → Google Sheet ("Website Inquiries") + email to info@ (D-50). The Node `/api/inquiry` route (Zoho + SMTP) stays for a future server host |
 | Validation | `npm run validate` passes; QA 42/42; no overflow 320–1440; JS ≤ 2.3 KB gz per page |
-| Launch | **Not ready.** See the blockers in [05](docs/phase-2-design/05-production-readiness-checklist.md) |
+| Launch | **Live 2026-11-02** on GitHub Pages, authorized by Mack Akhani (D-50). Open items in [05](docs/phase-2-design/05-production-readiness-checklist.md) |
 
 ## 7. Outstanding approvals and inputs (owner: company)
 

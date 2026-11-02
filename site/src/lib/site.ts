@@ -5,21 +5,31 @@ export const isReview = MODE === 'review';
 // at the company's request (2026-10-30); REVIEW_MARKERS=1 shows them for an approval session.
 // The items they mark stay tracked in docs/website-architecture/12 and 19.
 export const showMarkers = isReview && __REVIEW_MARKERS__;
-// The static GitHub Pages review preview: no server, so the contact form cannot deliver.
-export const isPagesPreview = __PAGES__;
+// Production on GitHub Pages (D-50): a static host with no server, so the contact form posts to
+// the Google Apps Script web app in apps-script/contact-form.gs instead of /api/inquiry.
+export const isStaticHost = __PAGES__;
+const APPS_SCRIPT_INQUIRY_URL = 'https://script.google.com/macros/s/AKfycbz8nPkA1TNsApYlmIGpXbj1WhIBWhppwGA5lW57SXBhfRJASb8QiD3KiKYCGGGR7mXI/exec';
+export const inquiryEndpoint = isStaticHost ? APPS_SCRIPT_INQUIRY_URL : '/api/inquiry';
+
+// GitHub Pages serves each page from its directory and 301s /page to /page/, so on that host
+// canonical and structured-data URLs carry the trailing slash to match what is actually served.
+export const pagePath = (path: string) => {
+  const bare = path.replace(/\/+$/, '');
+  if (!bare) return '/';
+  return isStaticHost && !/\.[a-z0-9]+$/i.test(bare) ? `${bare}/` : bare;
+};
 
 // Approval switches. Each flips to true when the decisions register records the approval.
 export const approvals = {
   healthcarePage: false, // N-05 draft, D-06: Industries hidden from primary nav until approved
-  privacyPolicy: false, // N-07, legal review (launch blocker)
+  privacyPolicy: true, // N-07: approved by the company for launch 2026-11-02 (D-50); docs/website-architecture/privacy-policy.md
   outcomeThemeCopy: false, // N-02 lines and the section heading
   akhaniParagraph: false, // N-06, legal wording
   newFormOptions: false, // N-16 "Event or presentation", "Existing client or colleague"
   advisors: false, // D-38–D-40: imported from trueleansolutions.com, role lines rewritten for Tech Transpire (draft); figures and each advisor's agreement to confirm
 };
 
-// The Privacy Policy draft carries counsel notes and placeholders, so it is shown only in an
-// approval session (REVIEW_MARKERS=1) until counsel approves it (N-07), never on the shared preview.
+// The Privacy Policy is published once approved (N-07); before that only an approval session showed it.
 export const showPrivacy = showMarkers || approvals.privacyPolicy;
 
 export const showIndustries = isReview || approvals.healthcarePage;

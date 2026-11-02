@@ -112,14 +112,15 @@ for (const f of sitePages) {
   if (r.includes('noindex')) failures.push(`GATE noindex left in public ${f}`);
 }
 if (raw(pub, 'index.html')?.includes('class="results"')) failures.push('GATE results band rendered without two verified results');
-for (const f of ['industries.html', 'industries/healthcare.html', 'privacy-policy.html']) if (has(pub, f)) failures.push(`GATE ${f} built before approval`);
+for (const f of ['industries.html', 'industries/healthcare.html']) if (has(pub, f)) failures.push(`GATE ${f} built before approval`);
 
 // 3. Launch blockers still present in public text (warnings).
 const blockers = [
   ['H-05 / C-17', 'contact-us.html', '1 business day'],
 ];
 for (const [id, f, s] of blockers) if (text(pub, f)?.includes(s)) warnings.push(`${id}: "${s}" on ${f} must be confirmed (or an omission approved) before launch`);
-if (!has(pub, 'privacy-policy.html')) warnings.push('N-07: Privacy Policy not yet approved; the contact form consent cannot link to it. Launch blocker');
+// N-07 approved for launch 2026-11-02 (D-50): the contact form consent links to it, so it must ship.
+if (!has(pub, 'privacy-policy.html')) failures.push('GATE Privacy Policy missing from the public build (N-07, D-50)');
 
 console.log(`Verbatim lines checked (review build): ${checked}`);
 console.log(`Articles held from the public build: ${held.length} (${held.join(', ')})`);
