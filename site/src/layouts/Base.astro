@@ -4,7 +4,7 @@ import '@fontsource-variable/libre-franklin';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { isReview, showMarkers, SITE_NAME, location } from '../lib/site';
+import { isReview, showMarkers, SITE_NAME, location, isStaticHost, pagePath } from '../lib/site';
 import { logo } from '../lib/images';
 import { getImage } from 'astro:assets';
 import { ClientRouter } from 'astro:transitions';
@@ -19,7 +19,9 @@ interface Props {
   heroHeader?: boolean;
 }
 const { title, description, ogImage, jsonLd = [], draft, heroHeader = false } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '') || Astro.site!.href;
+const canonical = isStaticHost
+  ? new URL(pagePath(Astro.url.pathname), Astro.site).href
+  : new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '') || Astro.site!.href;
 const og = await getImage({ src: ogImage ?? logo, width: 1200, format: 'jpg' });
 const ogUrl = new URL(og.src, Astro.site).href;
 const favicon = await getImage({ src: logo, width: 64, format: 'png' });

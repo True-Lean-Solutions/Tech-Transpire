@@ -24,7 +24,7 @@ Run the automated part with `cd site && npm run validate` (CI runs it on every p
 
 | # | Item | Blocker | Status | Evidence / owner |
 |---|---|---|---|---|
-| L-1 | Privacy Policy reviewed and published; consent text links to it | Yes | ☐ | Counsel (N-07). `check:content` warns until it exists |
+| L-1 | Privacy Policy reviewed and published; consent text links to it | Yes | ◐ | Approved by the company and published 2026-11-02 (D-50); `check:content` now fails if it is missing. Counsel review still recommended |
 | L-2 | Akhani LLC footer line and About paragraph wording | Yes | ☐ | Counsel (N-06) |
 | L-3 | Accessibility statement, Terms (N-08) | Recommended | ☐ | After hosting/analytics are known |
 | L-4 | Image usage rights for all published images (`data/assets.csv`) | Yes | ☐ | Company. Article covers are company-made; confirm |
@@ -45,13 +45,13 @@ Run the automated part with `cd site && npm run validate` (CI runs it on every p
 
 | # | Item | Blocker | Status | Evidence / owner |
 |---|---|---|---|---|
-| F-1 | **Contact form end-to-end: real lead in Zoho CRM and real email received** | **Yes** | ☐ | Owner actions in 04. Until then the form honestly shows failure |
+| F-1 | **Contact form end-to-end: real inquiry stored and real email received** | **Yes** | ☐ | D-50: Apps Script → Sheet + email. Redeploy `apps-script/contact-form.gs` as a new version, then submit one real test from the live site |
 | F-2 | Contact backend logic | Yes | ☑ | `npm test` 14/14 |
 | F-3 | No false success; failure message keeps input | Yes | ☑ | `npm run qa` (503 → failure) |
 | F-4 | Internal links and anchors resolve, both builds | Yes | ☑ | `check:links`: 924 review / 271 public links |
 | F-5 | External links (LinkedIn, Microsoft Bookings) reachable | Yes | ☐ | `node scripts/check-links.mjs dist-public/client --external` on a networked machine |
 | F-6 | Legacy redirects (`/home`, `/blogs`, `/about`, `/contact`, `/expertise`, `/case-studies`, `/blog`) return 301 | Yes | ◐ | `npm run qa` verified `/home` and `/blogs`; the rest come from the same config |
-| F-7 | Host-level rules: apex → www, http → https, trailing-slash 301s | Yes | ☐ | Hosting setup (D-19, R-01) |
+| F-7 | Host-level rules: apex → www, http → https, trailing-slash 301s | Yes | ☑ | GitHub Pages: apex → www, http → https and /page → /page/ all 301 (verified 2026-11-02); page links already carry the slash |
 | F-8 | No JS errors or horizontal overflow, 320–1440px | Yes | ☑ | `npm run qa` (12 routes × 2 widths) and screenshots (3 widths) |
 
 ## SEO
@@ -74,7 +74,7 @@ Run the automated part with `cd site && npm run validate` (CI runs it on every p
 | P-2 | CSRF: JSON-only form posting; Astro origin check for form posts | Yes | ☑ | `npm run qa` |
 | P-3 | Spam: honeypot, 3-second minimum, per-IP rate limit | Yes | ☑ | `npm test` |
 | P-4 | No personal data in logs or analytics | Yes | ☑ | Endpoint logs outcomes only; no analytics installed |
-| P-5 | Security headers on the host (HSTS, `X-Content-Type-Options`, `Referrer-Policy`, CSP) | Yes | ☐ | Hosting setup |
+| P-5 | Security headers on the host (HSTS, `X-Content-Type-Options`, `Referrer-Policy`, CSP) | Yes | ☐ | Not possible on GitHub Pages (D-50); accepted for launch. Revisit with a host that supports headers |
 | P-6 | Dependency audit (`npm audit`) clean or accepted | Yes | ☐ | Before launch |
 | P-7 | Analytics and consent (if any analytics is added) | If used | ☐ | D-16 open; Privacy Policy must match |
 
@@ -91,9 +91,9 @@ Run the automated part with `cd site && npm run validate` (CI runs it on every p
 
 | # | Item | Blocker | Status |
 |---|---|---|---|
-| O-1 | Hosting chosen; adapter set; staging URL shared with the team | Yes | ☐ |
+| O-1 | Hosting chosen; adapter set; staging URL shared with the team | Yes | ☑ GitHub Pages, static (D-50) |
 | O-2 | Live-site fixes R-01–R-06 (owner actions, 15) | Yes | ☐ |
 | O-3 | Export existing Apps Script form submissions before cut-over | Yes | ☐ |
 | O-4 | DNS cut-over plan; rollback plan | Yes | ☐ |
 | O-5 | Post-launch checks at 1 day / 2 weeks / 6 weeks | — | ☐ |
-| O-6 | **Explicit authorization to deploy** | Yes | ☐ |
+| O-6 | **Explicit authorization to deploy** | Yes | ☑ Mack Akhani, 2026-11-02 (D-50) |

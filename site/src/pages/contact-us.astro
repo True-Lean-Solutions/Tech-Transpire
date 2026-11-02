@@ -1,13 +1,14 @@
 ---
 // Contact (/contact-us, D-23). Form: approved field set (D-12, 06 §10), messages N-09.
-// Posts to /api/inquiry, the server function that creates the Zoho CRM lead and sends the
-// email notification (D-16, Phase 2 Step E). Success is shown only when the server confirms.
+// Posts to inquiryEndpoint: on GitHub Pages (production, D-50) the Google Apps Script web app
+// (apps-script/contact-form.gs: Google Sheet + email to info@); on a Node host /api/inquiry
+// (Zoho CRM lead + email, D-16). Success is shown only when the endpoint confirms.
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Flag from '../components/Flag.astro';
 import ContactArt from '../components/ContactArt.astro';
 import { block, lines, paragraph } from '../lib/content';
-import { contact, approvals, isReview, location, showPrivacy, isPagesPreview } from '../lib/site';
+import { contact, approvals, isReview, location, showPrivacy, inquiryEndpoint } from '../lib/site';
 
 const [, eyebrow] = lines(block('TT-PG-005-B01'));
 const startHeading = block('TT-PG-005-B02').heading;
@@ -67,7 +68,7 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
       <div class="form-card glass-card">
         <h2 style="font-size:1.75rem">{form.heading}</h2>
         <p class="muted" style="margin-top:8px">{formIntro}</p>
-        <form class="form" id="inquiry" action="/api/inquiry" method="post" novalidate data-success={success} data-preview={isPagesPreview ? '' : undefined}>
+        <form class="form" id="inquiry" action={inquiryEndpoint} method="post" novalidate data-success={success}>
           <div class="form-status form-status--error" id="form-summary" role="alert" tabindex="-1" hidden></div>
 
           <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required minlength="2" maxlength="120" data-msg="Please enter your name." /></div>
@@ -93,14 +94,10 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
           </div>
           <div class="hp" aria-hidden="true"><label for="f-website">Website</label><input id="f-website" name="website" tabindex="-1" autocomplete="off" /></div>
           <input type="hidden" name="startedAt" id="f-started" />
-          {/* Hidden on the review preview: it cannot send and the Privacy Policy is not published (review 2026-11-01). */}
-          <div class="field field--full" hidden={isPagesPreview}>
+          <div class="field field--full">
             <label class="consent" for="f-consent"><input id="f-consent" name="consent" type="checkbox" required data-msg="Please confirm you agree to the Privacy Policy so we can respond." /><span>I agree that Tech Transpire may use the information I've provided to respond to my enquiry, as described in the {privacyLive ? <a href="/privacy-policy">Privacy Policy</a> : 'Privacy Policy'}.</span></label>
           </div>
-          {isPagesPreview && <p class="form-status form-status--error field--full" id="f-preview" role="note">This review preview has no mail server, so the form cannot send. Please email <a href={`mailto:${contact.email}`}>{contact.email}</a> instead.</p>}
-          <div class="field field--full">{isPagesPreview
-            ? <button class="btn btn-primary" type="submit" style="justify-self:start" disabled aria-describedby="f-preview">Send unavailable in preview</button>
-            : <button class="btn btn-primary" type="submit" style="justify-self:start">Send message</button>}</div>
+          <div class="field field--full"><button class="btn btn-primary" type="submit" style="justify-self:start">Send message</button></div>
           <div class="form-status form-status--ok" id="form-ok" role="status" hidden></div>
         </form>
         <p class="muted" style="margin-top:24px;font-size:15px">Know an organization facing a high-stakes change? <a href="/services#fit">See who we work best with</a>, then introduce us, or choose “Referral or partnership” in the form above.<Flag label="N-13 · draft" /></p>
@@ -149,8 +146,6 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // GitHub Pages review preview: no server, so submission is disabled (D-43).
-      if (form.dataset.preview !== undefined) return;
       ok.hidden = true;
       const invalid = fields.filter((el) => { const m = errorFor(el); show(el, m); return !!m; });
       if (invalid.length) {
@@ -163,11 +158,15 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
       const button = form.querySelector('button[type=submit]') as HTMLButtonElement;
       button.disabled = true;
       try {
-        // JSON, not form encoding: cross-site JSON posts need a CORS preflight this endpoint never grants (CSRF-safe).
+        // Same-origin /api/inquiry takes JSON: cross-site JSON posts need a CORS preflight it never grants (CSRF-safe).
+        // Google Apps Script cannot answer a preflight, so the JSON goes as text/plain (a CORS simple request);
+        // it always replies 200, so the outcome is read from the body's ok/reason, never the status code.
+        const endpoint = form.getAttribute('action') ?? '';
+        const external = /^https:\/\//i.test(endpoint);
         const payload = Object.fromEntries([...new FormData(form).entries()].map(([k, v]) => [k, String(v)]));
-        const res = await fetch(form.action, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json', Accept: 'application/json' } });
+        const res = await fetch(endpoint, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': external ? 'text/plain;charset=utf-8' : 'application/json', Accept: 'application/json' } });
         const body = await res.json().catch(() => ({}));
-        if (res.status === 422 && body.errors) {
+        if (body.reason === 'validation' && body.errors) {
           const bad = fields.filter((el) => body.errors[el.name]);
           bad.forEach((el) => show(el, body.errors[el.name]));
           summary.textContent = 'Please check the highlighted fields.';

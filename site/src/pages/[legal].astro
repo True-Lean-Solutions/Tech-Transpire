@@ -1,18 +1,17 @@
 ---
-// Legal pages rendered from their drafts. Built for review now; published once approved (D-13).
+// Legal pages. The Privacy Policy is published from docs/website-architecture/privacy-policy.md,
+// approved for launch 2026-11-02 (N-07, D-50). The earlier counsel draft stays in drafts/ for history.
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/PageHeader.astro';
-import * as privacy from '../../../docs/website-architecture/drafts/privacy-policy-draft.md';
+import * as privacy from '../../../docs/website-architecture/privacy-policy.md';
 import { showPrivacy } from '../lib/site';
 
 export function getStaticPaths() {
   return showPrivacy ? [{ params: { legal: 'privacy-policy' } }] : [];
 }
-// The draft's drafting notes link to other Phase 1 documents; point those at the repository.
-const REPO = 'https://github.com/Himanshu-1-1/Tech-Transpire/blob/main/docs/website-architecture/';
-const html = (await privacy.compiledContent()).replace(/href="\.\.\/([^"#]+\.md)(#[^"]*)?"/g, (_m: string, p: string, h = '') => `href="${REPO}${p}${h}"`);
+const html = await privacy.compiledContent();
 ---
-<Base title="Privacy Policy | Tech Transpire" description="How Tech Transpire collects, uses and protects the information you share with us." draft="Privacy Policy is a first draft awaiting legal review (N-07)">
+<Base title="Privacy Policy | Tech Transpire" description="How Tech Transpire collects, uses and protects the information you share with us.">
   <PageHeader title="Privacy Policy" crumbs={[{ label: 'Home', href: '/' }, { label: 'Privacy Policy' }]} art={false} />
   <section class="section">
     <div class="container narrow legal-prose prose" set:html={html} />

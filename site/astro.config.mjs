@@ -25,11 +25,12 @@ const redirects = Object.fromEntries(
     .map(([source, , , , target]) => [source, { status: 301, destination: target === '/insights/case-studies' ? caseStudies : target }]),
 );
 
-// PAGES=1 builds a static review preview for GitHub Pages, served under /Tech-Transpire/.
-// No server there: the contact form shows its honest failure message. Root-relative links are
-// prefixed after the build by scripts/pages-base.mjs.
+// PAGES=1 builds the production site for GitHub Pages at https://www.techtranspire.com (D-50).
+// Static only: the contact form posts to Google Apps Script (apps-script/contact-form.gs).
+// scripts/pages-finalize.mjs then adds trailing slashes to page links (GitHub Pages serves
+// /page/ and 301s /page) and writes CNAME and .nojekyll.
 const pages = process.env.PAGES === '1';
-const PAGES_BASE = '/Tech-Transpire';
+const SITE = 'https://www.techtranspire.com';
 
 // The contact endpoint exists only where a server runs (src/server/inquiry-route.ts).
 const inquiryRoute = {
@@ -40,8 +41,7 @@ const inquiryRoute = {
 };
 
 export default defineConfig({
-  site: pages ? 'https://himanshu-1-1.github.io' : 'https://www.techtranspire.com',
-  base: pages ? PAGES_BASE : undefined,
+  site: SITE,
   trailingSlash: 'never',
   // Directory output (contact-us/index.html) so any static host or the Node server resolves
   // /contact-us without a trailing slash. Canonical URLs are unchanged.
@@ -53,7 +53,13 @@ export default defineConfig({
   redirects,
   integrations: [
     ...(pages ? [] : [inquiryRoute]),
-    ...(mode === 'public' && !pages ? [sitemap({ filter: (page) => !page.includes('/api/') })] : []),
+    ...(mode === 'public'
+      ? [sitemap({
+          filter: (page) => !page.includes('/api/'),
+          // On GitHub Pages every page is served at /page/ (see pages-finalize.mjs).
+          ...(pages ? { serialize: (item) => ({ ...item, url: item.url.endsWith('/') ? item.url : `${item.url}/` }) } : {}),
+        })]
+      : []),
   ],
   vite: {
     // Content and assets live in ../docs (Phase 1 archive), outside the Astro root.
