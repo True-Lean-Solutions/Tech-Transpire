@@ -19,7 +19,7 @@ export const corrections: Correction[] = [
   { id: 'E-03', block: 'TT-PG-004-B04', before: 'Kranthi Architects enterprise-grade', after: 'Kranthi architects enterprise-grade', kind: 'capitalization', approval: 'D-11' },
   { id: 'E-04a', block: 'TT-PG-004-B04', before: "TechTranspire's financial backbone", after: "Tech Transpire's financial backbone", kind: 'spelling', approval: 'D-11' },
   { id: 'E-04b', block: 'TT-INS-010-B10', before: 'CTA: Talk to TechTranspire >', after: 'CTA: Talk to Tech Transpire >', kind: 'spelling', approval: 'D-11 (link URL untouched)' },
-  { id: 'E-09', block: 'TT-INS-003-B06', before: ' Twelve other programs subsequently replicated it.', after: '', kind: 'temporary omission', approval: 'D-24; restore when C-14 is verified' },
+  // E-09 (temporary omission of the C-14 sentence in TT-INS-003-B06) retired 2026-11-05: C-14 verified (D-54).
   { id: 'E-10', block: 'TT-PG-004-B04', before: 'Mack brings over a decade of experience', after: 'Mack brings over two decades of experience', kind: 'content update', approval: 'D-35: the company, 2026-10-30 ("make it two decade"); also updates the Home founder intro' },
   // F-01–F-04 (page punctuation) were withdrawn on 2026-10-30 for the exact live wording, then
   // re-approved with F-08–F-13 on 2026-11-01 after the external review (D-42, D-43).

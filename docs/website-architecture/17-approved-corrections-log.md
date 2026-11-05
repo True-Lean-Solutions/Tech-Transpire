@@ -6,7 +6,7 @@ The source archive is never edited. Corrections are applied at build time by [`s
 
 Approval basis:
 - **D-11** (2026-10-29): E-01 to E-05 approved. The company confirmed the intended word for E-02 is "busywork".
-- **D-24** (2026-10-29): TT-INS-003 publishes without the unverified C-14 sentence (E-09).
+- **D-24** (2026-10-29): TT-INS-003 publishes without the unverified C-14 sentence (E-09). **Retired 2026-11-05 (D-54):** C-14 verified by Mack Akhani, sentence restored.
 - **D-43** (2026-11-01): after the external review, the company approved the copy fixes ("Sound Familiar?", "high-stakes", punctuation) through this log, preserving meaning and brand voice, and replaced two unsupported Home claims with qualified wording. See **Applied 2026-11-01** below.
 - **F-01 to F-07** (2026-10-29): approved *provided they are strictly punctuation, spelling or grammatical corrections that do not change the original meaning*. F-05 and F-06 are **not** punctuation (they are new copy), so this approval does not cover them; see below.
 
@@ -21,7 +21,7 @@ Approval basis:
 | E-04b | TT-INS-010-B10 | Spelling | `CTA: Talk to TechTranspire >` | `CTA: Talk to Tech Transpire >` |
 | E-05 | TT-INS-001-B10 / B11 | Formatting | Card title "Poor preparation and no pilot" exported as a section heading after a dangling `process` icon key | Rendered as the fourth card of B10 (icon `process`). No words changed |
 | E-10 | TT-PG-004-B04 | Content update (D-35, 2026-10-30) | `Mack brings over a decade of experience` | `Mack brings over two decades of experience` (the company asked for "two decade"; written grammatically). Also changes the Home founder intro, which quotes this sentence. C-10 now refers to "over two decades" |
-| E-09 | TT-INS-003-B06 | Temporary omission | ` Twelve other programs subsequently replicated it.` | *(omitted)*. Restore when C-14 is verified |
+| ~~E-09~~ | TT-INS-003-B06 | Temporary omission (**retired 2026-11-05, D-54**) | ` Twelve other programs subsequently replicated it.` | Restored: C-14 verified, the sentence renders as authored |
 | F-01 | TT-PG-001-B02 | Punctuation | `transformation points - moments` | `transformation points, moments` |
 | F-02 | TT-PG-001-B03 | Punctuation | `different directions invisible` | `different directions, invisible` |
 | F-03a | TT-PG-001-B05 | Punctuation | `understands it not dependent` | `understands it, not dependent` |

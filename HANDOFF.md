@@ -2,7 +2,7 @@
 
 **If you are a new agent or teammate taking over this project, read this file first.** It is the durable memory for the rebuild and must survive lost conversations. Update it whenever a decision is made, a claim is verified, or a step advances.
 
-Last updated: 2026-11-02 (production launch on GitHub Pages, D-50).
+Last updated: 2026-11-05 (all ten insights verified and published, D-54).
 
 ---
 
@@ -67,6 +67,7 @@ The machine used on 2026-10-29 had no system Node; a portable Node 22 from the s
 | 2026-10-29 | Phase 1 approved in principle; D-01–D-24 decided; corrections applied; MS-01 closed (18) |
 | 2026-10-29 | Astro site built (all templates) with content rendered from the Phase 1 data |
 | 2026-10-29 | **D-25 corrected:** claims report (19); publication gating implemented; 8 articles held |
+| 2026-11-05 | **D-54:** Mack verified the article figures; all 10 insights and the case-studies page publish; E-09 retired (C-14 sentence restored) |
 | 2026-10-29 | **Typography B, D-26–D-30** recorded; Dallas–Fort Worth added to footer, About, Contact, JSON-LD |
 | 2026-10-29 | **Premium design and interaction system (v3):** reference first fold, serif display system, signature "Confusion → Clarity" method graphic, magnetic CTAs, cursor halo, card spotlight, scroll reveals, concept graphics, reading progress, animated mobile menu (03) |
 | 2026-10-29 | **Contact backend:** `/api/inquiry` with Zoho CRM + SMTP, spam protection, honest states; 14 unit tests |
@@ -90,14 +91,14 @@ The machine used on 2026-10-29 had no system Node; a portable Node 22 from the s
 
 ## 5. Approved decisions (full text in 12 §5)
 
-D-01 brand statement · D-02 signature offer · D-03 no AI page · D-04 pre-founding attribution · D-05 two separate $3M · D-06 Industries + Healthcare (hidden in nav until approved) · D-08 Akhani LLC line (legal) · D-09 titles · D-10 Hidden Gaps held · D-11 E-01–E-05 (E-02 "busywork") · D-12 simple form · D-14 fit list on Expertise · **D-15 Astro** · D-16 Zoho + email · D-17 case-studies page (no unverified summary figures) · D-18 themes on Home, type filter only · D-19–D-23 · D-24 TT-INS-003 without the C-14 sentence · **D-25 revised (hold unverified)** · **D-26 no pricing** · **D-27 Dallas–Fort Worth** · **D-28 typography B** · **D-29 wording** (hero line, themes, "Selected Experience") · **D-30 photos**.
+D-01 brand statement · D-02 signature offer · D-03 no AI page · D-04 pre-founding attribution · D-05 two separate $3M · D-06 Industries + Healthcare (hidden in nav until approved) · D-08 Akhani LLC line (legal) · D-09 titles · D-10 Hidden Gaps held · D-11 E-01–E-05 (E-02 "busywork") · D-12 simple form · D-14 fit list on Expertise · **D-15 Astro** · D-16 Zoho + email · D-17 case-studies page (no unverified summary figures) · D-18 themes on Home, type filter only · D-19–D-23 · D-24 TT-INS-003 without the C-14 sentence (retired by D-54) · **D-25 revised (hold unverified)** · **D-26 no pricing** · **D-27 Dallas–Fort Worth** · **D-28 typography B** · **D-29 wording** (hero line, themes, "Selected Experience") · **D-30 photos**.
 
 ## 6. Current status
 
 | Area | Status |
 |---|---|
 | Design and templates | Complete in review. Waiting for photography (3 files) |
-| Public build | 10 pages: Home, Services, Transformation Recovery, Insights, 2 articles (006, 008), About, Contact, Privacy Policy, 404. Industries, Healthcare, case studies, advisors and 8 articles held |
+| Public build | Home, Services, Transformation Recovery, Insights, all 10 articles, Case studies, About, Contact, Privacy Policy, 404 (D-54). Industries, Healthcare and advisors held; Home "Selected Experience" figures (C-02–C-07) still pending |
 | Contact | Production: Google Apps Script → Google Sheet ("Website Inquiries") + email to info@ (D-50). The Node `/api/inquiry` route (Zoho + SMTP) stays for a future server host |
 | Validation | `npm run validate` passes; QA 42/42; no overflow 320–1440; JS ≤ 2.3 KB gz per page |
 | Launch | **Live 2026-11-02** on GitHub Pages, authorized by Mack Akhani (D-50). Open items in [05](docs/phase-2-design/05-production-readiness-checklist.md) |
@@ -105,7 +106,7 @@ D-01 brand statement · D-02 signature offer · D-03 no AI page · D-04 pre-foun
 ## 7. Outstanding approvals and inputs (owner: company)
 
 1. **Photography:** the **hero photo is in place** (`hero-glass-office-skyline.png`, supplied 2026-10-29; confirm its rights, TT-AS-024). **Mack Akhani photo in place (D-33).** Still wanted in `docs/phase-2-design/assets/`: `Executive Lounge Meeting Overlooking the City.png` (closing band). Note: the dev server must be restarted after adding files there.
-2. **Claims ([19](docs/website-architecture/19-article-claims-report.md)):** verify, or approve omissions, to release articles. Fastest path: the 005/010 engagement (C-05) and the 001/002 engagement figures; omissions for 001 (B08), 009 (stats + tag + heading), 010 (stats + sentence).
+2. **Claims:** article claims closed by D-54 (all ten insights publish). Still open: Home "Selected Experience" figures C-02–C-07 and the pre-founding attribution C-18 for 007–010.
 3. **Launch-blocking wording:** H-01 "three times…" · C-15 "6-8 weeks" / "2 to 6 weeks" · C-17 "1 business day".
 4. **New copy:** N-02 theme lines and the "What we help you achieve" heading · "Selected Experience" intro line · N-04 labels and sentence · N-05 Healthcare · N-06 · N-13 · N-14 · N-16 · N-17 · small UI labels ("A good fit", "Already under way?", "Recovery in practice", concept-graphic labels such as "Stalled" / "Back on a defined path").
 5. **Wording rule (D-31, D-32):** the company's Word files (`Home Page.docx`, `Services page.docx`, `About Us .docx`, local only) are the reference; existing text is used exactly as on the live site; no punctuation fixes (F-01–F-04 withdrawn, F-08–F-13 not applied).

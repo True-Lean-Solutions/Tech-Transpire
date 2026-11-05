@@ -99,7 +99,7 @@ const sitePages = ['index.html', 'services.html', 'services/transformation-recov
 const leaks = [
   ['review banner', /Review build/],
   ['withdrawn C-01 label', /Revenue impact/],
-  ['E-09 withheld sentence', /Twelve other programs subsequently replicated it/],
+  ...(verified('C-14') ? [] : [['E-09 withheld sentence', /Twelve other programs subsequently replicated it/]]),
   ['unverified result figure', /\$89M|\b63%|7 yrs|\b90\+|\$311|prevented \$3M|\$3M in fraud/],
   ...(verified('C-15') ? [] : [['unconfirmed timeframe tag (C-15)', /6-8 weeks/]]),
 ];
