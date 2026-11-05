@@ -10,7 +10,7 @@
 | **Internal review** | Review build (`npm run build`) | Everything renders, with amber tags on unverified items. `noindex` |
 | **Approved for publication** | Public build (`npm run build:public`) | Only content whose claims are verified, or whose unverified passages have an **approved** editorial omission. Otherwise the article is **held** |
 
-**Current public-build behaviour (implemented):** an article publishes only when every claim listed for it below is verified or covered by an approved omission. As of today **8 of 10 articles are held**. TT-INS-006 and TT-INS-008 publish. Nothing is deleted.
+**Current public-build behaviour (implemented):** an article publishes only when every claim listed for it below is verified or covered by an approved omission. On 2026-10-29 **8 of 10 articles were held**. **2026-11-05 (D-54):** Mack Akhani verified the figures; every AC-xx claim below (and C-08, C-09, C-14) is verified and **all ten articles publish**. The tables are kept as the record of what was verified. Nothing is deleted.
 
 ## How claims were found
 
@@ -23,7 +23,7 @@ Existing register IDs (12 §3) are shown where they apply. New IDs use the form 
 
 ---
 
-## TT-INS-001 · Mastering Kaizen Events (Guide) · **HELD**
+## TT-INS-001 · Mastering Kaizen Events (Guide) · **PUBLISHED** (verified, D-54)
 
 Mostly a method guide; one section reports an engagement.
 
@@ -36,7 +36,7 @@ Mostly a method guide; one section reports an engagement.
 
 Related: same figures as TT-INS-002 (C-18). **Lightest fix:** an approved omission of section B08 ("What It Looks Like When It Works"), two paragraphs, would let the rest of the guide publish.
 
-## TT-INS-002 · Two Quarters of Migration Work, Cleared in a Single Day (Case study) · **HELD**
+## TT-INS-002 · Two Quarters of Migration Work, Cleared in a Single Day (Case study) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|
@@ -50,7 +50,7 @@ Related: same figures as TT-INS-002 (C-18). **Lightest fix:** an approved omissi
 
 Attribution present: "Engagement led by Mack Akhani prior to founding Tech Transpire."
 
-## TT-INS-003 · A Seven-Year Migration, Closed in 19 Hours (Case study) · **HELD**
+## TT-INS-003 · A Seven-Year Migration, Closed in 19 Hours (Case study) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|
@@ -66,7 +66,7 @@ Attribution present: "Engagement led by Mack Akhani prior to founding Tech Trans
 
 Attribution present.
 
-## TT-INS-004 · A Weekend Scrum-to-Kanban Migration Across Nine Teams (Case study) · **HELD**
+## TT-INS-004 · A Weekend Scrum-to-Kanban Migration Across Nine Teams (Case study) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|
@@ -79,7 +79,7 @@ Attribution present.
 
 **Internal inconsistency to resolve:** the At a Glance says "9,000+" work items; B06 says "more than 10,000". Attribution present.
 
-## TT-INS-005 · What Value Stream Mapping Found: 9.5 Hours of Work Inside 208 Days of Delays (Case study) · **HELD**
+## TT-INS-005 · What Value Stream Mapping Found: 9.5 Hours of Work Inside 208 Days of Delays (Case study) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|
@@ -97,7 +97,7 @@ Attribution present ("Engagement facilitated by Mack Akhani, LSSBB, as Lean Tran
 
 No engagement claims. General statements only.
 
-## TT-INS-007 · The 19-Hour Project: What Rapid Execution Actually Looks Like (Perspective) · **HELD**
+## TT-INS-007 · The 19-Hour Project: What Rapid Execution Actually Looks Like (Perspective) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|
@@ -114,7 +114,7 @@ No engagement claims. General statements only.
 
 No figures or results. B04 describes a healthcare client's situation ("data loss that was causing patients to miss Medicare reimbursements") without claiming an outcome. Pre-founding attribution still to confirm (C-18).
 
-## TT-INS-009 · Supply Chain at Scale: How Decentralized Purchasing Silently Destroys Margins (Perspective) · **HELD**
+## TT-INS-009 · Supply Chain at Scale: How Decentralized Purchasing Silently Destroys Margins (Perspective) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|
@@ -125,7 +125,7 @@ No figures or results. B04 describes a healthcare client's situation ("data loss
 
 **No attribution line** (C-18). **Lightest fix:** approved omission of the B05 stats block and the B07 tag, and the heading changed to drop "90-Location" (an editorial change, needs approval). The narrative would then stand.
 
-## TT-INS-010 · Why Transformation Programs Fail After a Strong Start (Perspective) · **HELD**
+## TT-INS-010 · Why Transformation Programs Fail After a Strong Start (Perspective) · **PUBLISHED** (verified, D-54)
 
 | ID | Kind | Exact text |
 |---|---|---|

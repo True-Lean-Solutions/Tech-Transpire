@@ -56,7 +56,6 @@ const sameAsTitle =(h: string) => h.trim().toLowerCase() === i.h1.trim().toLower
 const crumbs = [{ label: 'Home', href: '/' }, { label: 'Insights', href: '/insights' }, ...(i.type === 'case-study' ? [{ label: 'Case studies', href: '/insights/case-studies' }] : [])];
 const related = visibleById(i.related);
 const reviewNotes: Record<string, string> = {
-  'TT-INS-003': 'E-09 · one unverified sentence withheld until C-14 is verified',
   'TT-INS-007': 'C-18 · confirm pre-founding attribution',
   'TT-INS-008': 'C-18 · confirm pre-founding attribution',
   'TT-INS-009': 'C-18 · confirm pre-founding attribution',
