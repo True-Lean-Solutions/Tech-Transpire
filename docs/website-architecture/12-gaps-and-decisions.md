@@ -52,25 +52,25 @@ Nothing in this table is published until its status is ✅. Pending items stay i
 | ID | Claim (exact source wording) | Where | Status | What is needed / decision |
 |---|---|---|---|---|
 | C-01 | "$3M+ — Revenue impact from founder-led transformation engagements" | TT-PG-001-B08 | ✖ **Label withdrawn** (company: do not describe as "$3M revenue impact" or combine the two $3M outcomes) | Source text archived unchanged. Home shows instead whichever of C-02 / C-03 is verified, with its own label and attribution (wording in §4, N-15) |
-| C-02 | "prevented $3M in fraud losses" | TT-PG-004-B04 (Mack Akhani bio) | ⏳ Confirmed by company as a **separate** outcome (global eCommerce, fraud prevention); pending supporting evidence | Source material is in the private master folder (C-19). Prior-role attribution applies (D-04) |
+| C-02 | "prevented $3M in fraud losses" | TT-PG-004-B04 (Mack Akhani bio) | ✅ **Verified** by company 2026-11-12 | Prior-role attribution applies (D-04) |
 | C-03 | "$3M — Annual savings through preferred pricing and inventory optimization" | TT-INS-009-B05 | ⏳ Confirmed by company as a **separate** outcome (healthcare purchasing/standardization); pending supporting evidence | Also needs C-18 (pre-founding or not) |
 | C-04 | "90+ Locations served in a single centralized supply chain engagement" | TT-PG-001-B08 | ⏳ | Consistent with TT-INS-009 ("over 80 clinics and 10 surgery centers"); needs evidence + C-18 |
-| C-05 | "63% Reduction in median implementation time 209 days to 78 in one engagement" | TT-PG-001-B08; TT-INS-005; TT-INS-010; bio | ⏳ | TT-INS-005 is attributed pre-founding; TT-INS-010 is not (C-18) |
-| C-06 | "$89M Annual purchasing volume centralized in a single healthcare network transformation" | TT-PG-001-B08; TT-INS-009; bio | ⏳ | Evidence + C-18 |
-| C-07 | "7 yrs Stalled initiative closed 2 years ahead of schedule using structured Kaizen methodology" | TT-PG-001-B08; TT-INS-003; TT-INS-007 | ⏳ | TT-INS-003 is attributed pre-founding. TT-INS-007 is treated as a **separate engagement** (company decision) until verified (C-18) |
+| C-05 | "63% Reduction in median implementation time 209 days to 78 in one engagement" | TT-PG-001-B08; TT-INS-005; TT-INS-010; bio | ✅ **Verified** by company 2026-11-12 | TT-INS-005 is attributed pre-founding; C-18 still open for TT-INS-010 |
+| C-06 | "$89M Annual purchasing volume centralized in a single healthcare network transformation" | TT-PG-001-B08; TT-INS-009; bio | ✅ **Verified** by company 2026-11-12 | C-18 still open for TT-INS-009 |
+| C-07 | "7 yrs Stalled initiative closed 2 years ahead of schedule using structured Kaizen methodology" | TT-PG-001-B08; TT-INS-003; TT-INS-007 | ✅ **Verified** by company 2026-11-12 | TT-INS-003 is attributed pre-founding. TT-INS-007 separate engagement until C-18 confirmed |
 | C-08 | "$311,000 in annual savings", "improved quality by 50%", division "subsequently acquired" | TT-INS-003-B07 | ⏳ | Evidence + confidentiality check |
 | C-09 | "1,938 hours… 12 full-time employees"; "166 people in six countries" | TT-INS-004 | ⏳ | Evidence |
-| C-10 | "over two decades of experience" (was "over a decade"; updated by the company 2026-10-30, D-35) | Mack Akhani bio | ✅◐ Approved, provided the bio's timeline is accurate | Confirm the start year used to support "over two decades" |
+| C-10 | "over two decades of experience" (was "over a decade"; updated by the company 2026-10-30, D-35) | Mack Akhani bio | ✅ **Verified** by company 2026-11-12 | Bio timeline confirmed accurate |
 | C-11 | Lean Six Sigma Black Belt ("LSSBB") | TT-INS-005 attribution line | ✅ **Confirmed** | May also appear on Mack's profile (wording to approve) |
-| C-12 | "PMP Certified" | Kranthi Kumar Goli title | ⏳ Pending Kranthi's confirmation | Profile not published until confirmed |
-| C-13 | Bio details ("over five years…", "pursuing his Chartered Accountancy qualification", tools) | Devjet Bag bio | ⏳ Pending Devjet's confirmation | Profile not published until confirmed |
+| C-12 | "PMP Certified" | Kranthi Kumar Goli title | ✅ **Verified** by company 2026-11-12 | |
+| C-13 | Bio details ("over five years…", "pursuing his Chartered Accountancy qualification", tools) | Devjet Bag bio | ✅ **Verified** by company 2026-11-12 | |
 | C-14 | "Twelve other programs subsequently replicated it." | TT-INS-003-B06 | ⏳ In the original material; pending validation | Article publishes with this sentence **only** after validation. Until then: hold the article or approve a temporary omission (D-24) |
 | C-15 | "6-8 weeks"; "within 2 to 6 weeks" | TT-PG-001-B06, TT-PG-002-B03/B04 | 🟦 | Confirm these are current service timeframes |
 | C-16 | "We guarantee the rigor, clarity, and honesty behind every recommendation" | TT-PG-004-B05 | 🟦 | Guarantees process, not results; recommended to keep |
 | C-17 | "Response within 1 business day" | TT-PG-005 | 🟦 | Confirm it can be met |
 | **C-18** | Engagement identity and timing for TT-INS-007, 008, 009, 010 | Those articles (they have no attribution line) | ⏳ **New** | For each: (a) was it led before Tech Transpire was founded? If so, add the D-04 line. (b) Is it the same engagement as TT-INS-003 / 002 / 005? Until answered they are separate engagements, and none of their figures are combined with other articles |
 | **C-19** | Source material for the $3M fraud-prevention outcome (global eCommerce) | Mentioned by the company; not on the site except the bio | ⏳ Source located (2026-10-29) | The May 2026 draft's "Fraud Prevention Program — Global eCommerce" summary ([18](18-drive-master-reconciliation.md)). A self-authored summary, not evidence: C-02 still needs supporting evidence |
-| **C-20** | Hemang Dwivedi bio and title | TT-PG-004-B04 | 🟦 | No issue raised. Confirm for publication, as for the other profiles |
+| **C-20** | Hemang Dwivedi bio and title | TT-PG-004-B04 | ✅ **Verified** by company 2026-11-12 | |
 
 ## 4. New content (N-xx)
 
