@@ -2,7 +2,7 @@
 import Icon from './Icon.astro';
 interface Props { items: { fit: boolean; text: string }[]; yesTitle?: string; noTitle?: string }
 // Headings as on the live site (techtranspire.com, confirmed by the company 2026-10-30).
-const { items, yesTitle = 'This is for you if', noTitle = 'We may not be the right fit for you if' } = Astro.props;
+const { items, yesTitle = 'This is for you if', noTitle = 'This may not be for you if' } = Astro.props;
 const yes = items.filter((i) => i.fit);
 const no = items.filter((i) => !i.fit);
 ---

@@ -598,7 +598,7 @@ html:not(.js) .search-btn { display: none; }
 .fit-col { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(24px, 3vw, 36px); }
 .fit-col h3 { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom: 14px; }
 .fit-col ul { list-style: none; padding: 0; display: grid; }
-.fit-col li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; padding-block: 13px; border-top: 1px solid var(--line); font-size: 15.5px; }
+.fit-col li { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 12px; padding-block: 13px; border-top: 1px solid var(--line); font-size: 15.5px; }
 .fit-col li:first-child { border-top: 0; }
 .fit-col svg { width: 20px; height: 20px; margin-top: 3px; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .fit-col--yes svg { stroke: var(--blue); }
