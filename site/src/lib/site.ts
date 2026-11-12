@@ -26,7 +26,7 @@ export const approvals = {
   outcomeThemeCopy: false, // N-02 lines and the section heading
   akhaniParagraph: false, // N-06, legal wording
   newFormOptions: false, // N-16 "Event or presentation", "Existing client or colleague"
-  advisors: false, // D-38–D-40: imported from trueleansolutions.com, role lines rewritten for Tech Transpire (draft); figures and each advisor's agreement to confirm
+  advisors: true, // D-38–D-40: approved by company 2026-11-12; Leighton Anderson added same date (C-21)
 };
 
 // The Privacy Policy is published once approved (N-07); before that only an approval session showed it.

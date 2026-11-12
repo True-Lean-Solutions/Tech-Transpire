@@ -71,6 +71,7 @@ Nothing in this table is published until its status is ✅. Pending items stay i
 | **C-18** | Engagement identity and timing for TT-INS-007, 008, 009, 010 | Those articles (they have no attribution line) | ⏳ **New** | For each: (a) was it led before Tech Transpire was founded? If so, add the D-04 line. (b) Is it the same engagement as TT-INS-003 / 002 / 005? Until answered they are separate engagements, and none of their figures are combined with other articles |
 | **C-19** | Source material for the $3M fraud-prevention outcome (global eCommerce) | Mentioned by the company; not on the site except the bio | ⏳ Source located (2026-10-29) | The May 2026 draft's "Fraud Prevention Program — Global eCommerce" summary ([18](18-drive-master-reconciliation.md)). A self-authored summary, not evidence: C-02 still needs supporting evidence |
 | **C-20** | Hemang Dwivedi bio and title | TT-PG-004-B04 | ✅ **Verified** by company 2026-11-12 | |
+| **C-21** | Leighton Anderson advisor bio | advisors.json | ✅ **Verified** by company 2026-11-12 | No photo supplied yet |
 
 ## 4. New content (N-xx)
 
