@@ -46,7 +46,7 @@ const focus: Record<string, string> = {
   'Devjet Bag': '50% 24%',
 };
 // Advisor portraits supplied by the company, matched by name: [name in advisors.json, photo, focal point].
-const advisorPhotos = ([['Wally Potts', photo('wally potts'), '52% 30%'], ['Sanket Thakkar', photo('sanket thakkar'), '50% 34%'], ['Ketul Thakker', photo('ketul thakker'), '47% 32%'], ['Saurabh Kumar', photo('saurabh kumar'), '47% 34%'], ['Dharmendra Mistry', photo('dharmendra mistry'), '46% 34%']] as [string, ImageMetadata | undefined, string][]).filter(([, img]) => img);
+const advisorPhotos = ([['Wally Potts', photo('wally potts'), '52% 30%'], ['Sanket Thakkar', photo('sanket thakkar'), '50% 34%'], ['Ketul Thakker', photo('ketul thakker'), '47% 32%'], ['Saurabh Kumar', photo('saurabh kumar'), '47% 34%'], ['Dharmendra Mistry', photo('dharmendra mistry'), '46% 34%'], ['Leighton Anderson', photo('leighton anderson'), '50% 18%']] as [string, ImageMetadata | undefined, string][]).filter(([, img]) => img);
 // Our Message pledges: the commitment (first sentence) leads, the reason follows. Same words, same order.
 const pledge = (s: string) => { const i = s.indexOf('. '); return i < 0 ? [s, ''] : [s.slice(0, i + 1), s.slice(i + 2)]; };
 const people = team(teamBlock).filter((p) => isReview || isVerified(...gates[p.name]));
