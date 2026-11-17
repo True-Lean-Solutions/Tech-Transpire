@@ -92,8 +92,9 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
             <select id="f-source" name="source"><option value="">Select one</option>{sources.map((s) => <option>{s}</option>)}</select>
             <Flag label="N-16 · two new options pending approval" />
           </div>
-          <div class="hp" aria-hidden="true"><label for="f-website">Website</label><input id="f-website" name="website" tabindex="-1" autocomplete="off" /></div>
+          <div class="hp" aria-hidden="true"><label for="f-website">Leave this field empty</label><input id="f-website" name="website" tabindex="-1" autocomplete="off" /></div>
           <input type="hidden" name="startedAt" id="f-started" />
+          <input type="hidden" name="form_ts" id="f-form-ts" />
           <div class="field field--full">
             <label class="consent" for="f-consent"><input id="f-consent" name="consent" type="checkbox" required data-msg="Please confirm you agree to the Privacy Policy so we can respond." /><span>I agree that Tech Transpire may use the information I've provided to respond to my enquiry, as described in the {privacyLive ? <a href="/privacy-policy">Privacy Policy</a> : 'Privacy Policy'}.</span></label>
           </div>
@@ -112,8 +113,11 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
   const form = document.getElementById('inquiry') as HTMLFormElement | null;
   if (form && !form.dataset.wired) {
     form.dataset.wired = '';
-    const started = document.getElementById('f-started') as HTMLInputElement;
-    started.value = String(Date.now());
+    // startedAt is read by the Apps Script deployed before D-55; drop it once Version 5 is live.
+    const loadedAt = String(Date.now());
+    (document.getElementById('f-started') as HTMLInputElement).value = loadedAt;
+    (document.getElementById('f-form-ts') as HTMLInputElement).value = loadedAt;
+    const honeypot = document.getElementById('f-website') as HTMLInputElement;
     const summary = document.getElementById('form-summary')!;
     const ok = document.getElementById('form-ok')!;
     const interest = new URLSearchParams(location.search).get('interest');
@@ -155,6 +159,13 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
         return;
       }
       summary.hidden = true;
+      const succeed = () => {
+        ok.textContent = form.dataset.success ?? '';
+        ok.hidden = false;
+        form.querySelectorAll<HTMLElement>('.field').forEach((f) => (f.hidden = true));
+      };
+      // A filled honeypot gets the normal success message and nothing is sent.
+      if (honeypot.value.trim()) { succeed(); return; }
       const button = form.querySelector('button[type=submit]') as HTMLButtonElement;
       button.disabled = true;
       try {
@@ -164,6 +175,7 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
         const endpoint = form.getAttribute('action') ?? '';
         const external = /^https:\/\//i.test(endpoint);
         const payload = Object.fromEntries([...new FormData(form).entries()].map(([k, v]) => [k, String(v)]));
+        payload.submitted = new Date().toISOString();
         const res = await fetch(endpoint, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': external ? 'text/plain;charset=utf-8' : 'application/json', Accept: 'application/json' } });
         const body = await res.json().catch(() => ({}));
         if (body.reason === 'validation' && body.errors) {
@@ -175,9 +187,7 @@ const sources = ['LinkedIn', 'Facebook', 'Referral', 'Search', ...(isReview || a
           return;
         }
         if (!res.ok || !body.ok) throw new Error(String(res.status));
-        ok.textContent = form.dataset.success ?? '';
-        ok.hidden = false;
-        form.querySelectorAll<HTMLElement>('.field').forEach((f) => (f.hidden = true));
+        succeed();
       } catch {
         summary.textContent = "Your message didn't go through. Please try again in a moment, or reach us directly at info@techtranspire.com or +1 (979) 479-2779.";
         summary.hidden = false;

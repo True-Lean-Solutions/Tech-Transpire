@@ -1,7 +1,7 @@
 // Contact backend tests. Run: npm test  (node --test with type stripping; no network, no secrets)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleInquiry, validate, createRateLimiter, type Deps, type Inquiry } from '../src/server/inquiry.ts';
+import { handleInquiry, validate, spamCheck, createRateLimiter, type Deps, type Inquiry } from '../src/server/inquiry.ts';
 import { createLead, leadRecord, resetZohoToken, type ZohoConfig } from '../src/server/zoho.ts';
 import { notification } from '../src/server/mail.ts';
 
@@ -17,6 +17,8 @@ const good = {
   consent: 'on',
   website: '',
   startedAt: String(NOW - 60_000),
+  form_ts: String(NOW - 60_000),
+  submitted: new Date(NOW - 1000).toISOString(),
 };
 const deps = (over: Partial<Deps> = {}): Deps & { calls: string[] } => {
   const calls: string[] = [];
@@ -63,9 +65,42 @@ test('honeypot submissions are discarded silently', async () => {
 
 test('submissions faster than 3 seconds are discarded silently', async () => {
   const d = deps();
-  const r = await handleInquiry({ ...good, startedAt: String(NOW - 1500) }, 'ip', d);
+  const r = await handleInquiry({ ...good, form_ts: String(NOW - 1500), submitted: new Date(NOW).toISOString() }, 'ip', d);
   assert.equal(r.status, 200);
   assert.ok(!d.calls.includes('crm'));
+  assert.ok(d.calls.includes('log:spam:too_fast'));
+});
+
+test('spam rules: each reason, and a missing timestamp rejects rather than skips', () => {
+  const at = (ms: number) => new Date(ms).toISOString();
+  const cases: [Record<string, string>, string | null][] = [
+    [good, null],
+    [{ ...good, website: 'x' }, 'honeypot'],
+    [{ ...good, form_ts: '' }, 'form_ts_missing'],
+    [{ ...good, form_ts: '12345' }, 'form_ts_invalid'],
+    [{ ...good, form_ts: '1730000000000abc' }, 'form_ts_invalid'],
+    [{ ...good, submitted: '' }, 'submitted_missing'],
+    [{ ...good, submitted: 'yesterday-ish' }, 'submitted_invalid'],
+    [{ ...good, form_ts: String(NOW - 2000), submitted: at(NOW) }, 'too_fast'],
+    [{ ...good, form_ts: String(NOW), submitted: at(NOW - 60_000) }, 'too_fast'],
+    [{ ...good, form_ts: String(NOW - 9 * 86_400_000), submitted: at(NOW) }, 'too_old'],
+    [{ ...good, form_ts: String(NOW - 7 * 86_400_000), submitted: at(NOW) }, null],
+    // Visitor clock 10 minutes ahead of the server: still accepted (both timestamps share that clock).
+    [{ ...good, form_ts: String(NOW + 600_000), submitted: at(NOW + 610_000) }, null],
+  ];
+  const { form_ts: _f, submitted: _s, ...legacy } = good;
+  cases.push([legacy, 'form_ts_missing']);
+  for (const [f, want] of cases) assert.equal(spamCheck(f, NOW), want, JSON.stringify(f));
+});
+
+test('rejected spam never counts toward the rate limit', async () => {
+  let checks = 0;
+  const d = deps({ allow: () => { checks++; return true; } });
+  await handleInquiry({ ...good, website: 'x' }, 'ip', d);
+  await handleInquiry({ ...good, form_ts: '' }, 'ip', d);
+  assert.equal(checks, 0);
+  await handleInquiry(good, 'ip', d);
+  assert.equal(checks, 1);
 });
 
 test('no integration configured → 503, so the visitor sees the failure state', async () => {

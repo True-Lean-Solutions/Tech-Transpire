@@ -48,6 +48,26 @@ const MSG = {
 
 const clean = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '');
 
+// Spam rules (D-55), mirrored in apps-script/contact-form.gs spamCheck_. form_ts (page load) and
+// submitted (send time) both come from the visitor's clock, so their difference is skew-safe.
+export const MIN_FILL_MS = 3000;
+export const MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000; // 7 days + 1 day leeway, against the server clock
+const raw = (v: unknown) => (v == null ? '' : String(v).trim());
+
+export function spamCheck(fields: Record<string, unknown>, now: number): string | null {
+  if (raw(fields.website)) return 'honeypot';
+  const ts = raw(fields.form_ts);
+  if (!ts) return 'form_ts_missing';
+  if (!/^\d{10,15}$/.test(ts)) return 'form_ts_invalid';
+  const sub = raw(fields.submitted);
+  if (!sub) return 'submitted_missing';
+  const subMs = Date.parse(sub);
+  if (Number.isNaN(subMs)) return 'submitted_invalid';
+  if (subMs - Number(ts) < MIN_FILL_MS) return 'too_fast';
+  if (now - Number(ts) > MAX_AGE_MS) return 'too_old';
+  return null;
+}
+
 export function validate(fields: Record<string, string>, now: number): { data?: Inquiry; errors?: Record<string, string> } {
   const errors: Record<string, string> = {};
   const name = clean(fields.name);
@@ -88,10 +108,10 @@ export function validate(fields: Record<string, string>, now: number): { data?: 
 }
 
 export async function handleInquiry(fields: Record<string, string>, ip: string, deps: Deps): Promise<Result> {
-  // Spam signals: discarded silently with a normal-looking response (06 §10).
-  if (clean(fields.website)) { deps.log('spam:honeypot'); return { status: 200, body: { ok: true } }; }
-  const started = Number(fields.startedAt);
-  if (started && deps.now() - started < 3000) { deps.log('spam:too-fast'); return { status: 200, body: { ok: true } }; }
+  // Spam is answered exactly like a real submission and checked before the rate limit, so
+  // rejected posts never use up a real visitor's allowance (06 §10, D-55).
+  const spam = spamCheck(fields, deps.now());
+  if (spam) { deps.log(`spam:${spam}`); return { status: 200, body: { ok: true } }; }
   if (!deps.allow(ip)) { deps.log('rate-limited'); return { status: 429, body: { ok: false, reason: 'rate-limited' } }; }
 
   const { data, errors } = validate(fields, deps.now());
