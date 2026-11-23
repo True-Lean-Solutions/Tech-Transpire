@@ -14,18 +14,38 @@ The behavior is ported from the True Lean Solutions site (`True-Lean-Solutions/T
 | Tab, card and form | `site/src/components/GuidePrompt.astro` | Markup and styles. Rendered by `site/src/layouts/Base.astro` only while the guide is enabled |
 | Behavior | `site/src/scripts/guide.ts` | When the tab appears, the form, the download, the liquid glass. Re-wired on every page, including client-side navigations |
 | Footer link | `site/src/components/Footer.astro` | "Free field guide" in the legal bar opens the card on any page |
-| Glass engine | `site/src/vendor/liquid-glass.js` (v1.1.0, MIT, see `liquid-glass.LICENSE.txt`) | Draws the open card. Loaded only the first time the card opens |
+| Glass | `GuidePrompt.astro` (CSS and an SVG filter) and `scripts/guide.ts` | Transparent glass over the live page. See "The glass" below |
 | Script | `docs/apps-script/guide-leads.gs` | Checks for spam and writes the lead to the sheet. This file is the copy of record |
 
 ## What the visitor sees
 
-- A one-line tab at the bottom left: a document icon, "Free field guide", an arrow and a close button. It is not a pop-up: no overlay, no backdrop, no focus steal, no scroll lock.
+- A one-line tab at the bottom right, where sites usually put a chat launcher (Tech Transpire has no bot): a document icon, "Free field guide", an arrow and a close button. It is not a pop-up: no overlay, no backdrop, no focus steal, no scroll lock.
+- To be noticed, the tab gives a short shake with a soft blue ring when it arrives, then again every 8 seconds, four times in all. It stops for good on that page as soon as the visitor hovers over it, focuses it or opens it. With reduced motion there is no shake, just a steady ring. The × hides it, which also satisfies WCAG 2.2.2.
+- On the home page the section rail shares the right edge; it fades out while the card is open, so the two never overlap.
 - The tab appears after 30% of the page is scrolled or 20 seconds, whichever comes first. Not on Contact, Privacy Policy or the 404 page, and not while the visitor is typing in a field.
 - At most three automatic appearances in 14 days. Once the tab has appeared, it stays on the following pages of that browser session without counting again. Closing it hides it for 14 days. After a download it never appears again on that browser.
 - The tab opens a compact card: kicker, the title (linking to *You Don't Have an Execution Problem. You're Executing the Wrong Plan.*), the promise, three fact chips, then Name, Work email and "Download the guide".
 - On submit the PDF downloads at once and the card reads "Your guide is downloading." with a plain link to the same file.
 - Escape folds a card opened from the tab back to the tab, or closes a card opened from the footer and returns focus to the footer link.
 - State lives in `localStorage` (`tt:guide:done`, `tt:guide:dismissed`, `tt:guide:shown`) and `sessionStorage` (`tt:guide:on`). With storage blocked, every visit behaves as the first.
+
+## The glass
+
+The card is real glass over the live page: what is behind it shows through, blurred and colour-boosted (`backdrop-filter: blur(18px) saturate(180%)`), with a specular sheen across the top-left and a light rim.
+
+- **Chrome and Edge** also bend the page along the card's rim, with a slight colour split, like the edge of a lens. An SVG displacement filter does this (`#gd-refract` in `GuidePrompt.astro`). `scripts/guide.ts` draws its map to the card's exact size and corner radius, and redraws it whenever the card changes shape.
+- **Safari and Firefox** don't support SVG filters in `backdrop-filter`, so they get the same transparent glass without the bent edge.
+- The site's WebGL engine (`site/src/vendor/liquid-glass.js`) is not used here. It can only refract a picture it draws itself, not the live page, so it made the card look like a solid pale panel.
+
+Because the page shows through, the glass changes tone with what is behind it so text keeps WCAG AA. `scripts/guide.ts` samples the page under the card on scroll and resize:
+
+| Tone | When | Glass |
+|---|---|---|
+| `clear` | A light part of the page | 50% white |
+| `dense` | Photos, canvases, or light and dark mixed | 84% white |
+| `dark` | Mostly navy (Results band, CTA band, footer) | 80% navy, with white text |
+
+Contrast was measured from rendered pixels over each case: light sections, the navy band, half over the navy band, the footer, and the advisor portraits. The lowest result was 4.69:1, for blue text over the darkest part of a portrait.
 
 ## Switching it on
 

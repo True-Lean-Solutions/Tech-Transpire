@@ -1,9 +1,8 @@
 // Field-guide tab, card and lead form (D-56; markup and styles in components/GuidePrompt.astro).
 // Re-wired on every page load, including client-side navigations, and torn down before each swap.
 
-type Glass = { pause(): void; resume(): void; refresh(): void; destroy(): void };
-type Engine = { create(canvas: HTMLCanvasElement, options: object): Glass | null };
 type State = 'tab' | 'open' | 'done';
+type Tone = 'clear' | 'dense' | 'dark';
 
 const DONE_KEY = 'tt:guide:done';
 const DISMISSED_KEY = 'tt:guide:dismissed';
@@ -18,6 +17,12 @@ const MAX_SHOWS = 3;
 const SCROLL_SHARE = 0.3;
 const WAIT_MS = 20_000;
 const RETRY_MS = 1500;
+/** Attention nudges: the first soon after the tab arrives, then a few more, until the visitor reacts. */
+const NUDGE_FIRST_MS = 700;
+const NUDGE_GAP_MS = 8000;
+const NUDGES = 4;
+/** Width of the refracting rim, in CSS px. */
+const RIM = 16;
 // Loose on purpose: the browser's own email check runs too, and the Apps Script has the final say.
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -28,6 +33,10 @@ const store = (area: () => Storage) => ({
 });
 const local = store(() => window.localStorage);
 const session = store(() => window.sessionStorage);
+
+// backdrop-filter: url() (SVG refraction of the live page) works in Chromium only; elsewhere the
+// card keeps the plain blurred glass. Only Chromium exposes navigator.userAgentData.
+const canRefract = () => !!(navigator as Navigator & { userAgentData?: { brands?: { brand: string }[] } }).userAgentData?.brands?.some((b) => b.brand === 'Chromium');
 
 let page: AbortController | null = null;
 document.addEventListener('astro:page-load', init);
@@ -58,85 +67,162 @@ function init() {
   let visible = false;
   let returnTo: HTMLElement | null = null;
   let timer = 0;
-  signal.addEventListener('abort', () => window.clearTimeout(timer));
+  signal.addEventListener('abort', () => {
+    window.clearTimeout(timer);
+    document.documentElement.classList.remove('guide-open');
+  });
 
-  // ---- Liquid glass, loaded the first time the card opens ----
-  let glass: Glass | null = null;
-  let glassAsked = false;
-  signal.addEventListener('abort', () => glass?.destroy());
-
-  /** What the glass refracts: a near-white field lit by the site's blues, from its own tokens. */
-  const backdrop = () => {
-    const css = getComputedStyle(document.documentElement);
-    const rgb = (token: string) => {
-      const hex = css.getPropertyValue(token).trim().replace('#', '');
-      return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
-    };
-    const c = document.createElement('canvas');
-    c.width = 700;
-    c.height = 1000;
-    const g = c.getContext('2d');
-    if (!g) return null;
-    g.fillStyle = `rgb(${rgb('--mist')})`;
-    g.fillRect(0, 0, c.width, c.height);
-    const glow = (x: number, y: number, r: number, color: string, alpha: number) => {
-      const grad = g.createRadialGradient(x, y, 0, x, y, r);
-      grad.addColorStop(0, `rgba(${color},${alpha})`);
-      grad.addColorStop(1, `rgba(${color},0)`);
-      g.fillStyle = grad;
-      g.fillRect(0, 0, c.width, c.height);
-    };
-    glow(60, 40, 460, rgb('--sky'), 0.22);
-    glow(660, 260, 420, rgb('--blue'), 0.14);
-    glow(120, 960, 480, rgb('--blue'), 0.12);
-    glow(640, 940, 420, rgb('--sky'), 0.2);
-    glow(350, 500, 340, '255,255,255', 0.8);
-    return c;
+  // ---- Glass: tone from what is behind the card ----
+  const lum = (r: number, g: number, b: number) => {
+    const lin = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
   };
-
-  const startGlass = async () => {
-    if (glassAsked) return;
-    glassAsked = true;
-    const canvas = card.querySelector<HTMLCanvasElement>('.gd-glass');
-    const bg = backdrop();
-    if (!canvas || !bg) return;
-    try {
-      const mod = (await import('../vendor/liquid-glass.js')) as { default?: Engine };
-      if (signal.aborted) return;
-      const engine = mod.default?.create ? mod.default : (globalThis as { LiquidGlass?: Engine }).LiquidGlass;
-      // The canvas needs a size before the engine can draw; CSS takes over once it binds the card.
-      canvas.style.display = 'block';
-      glass = engine?.create(canvas, {
-        background: bg,
-        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--mist').trim(),
-        preset: 'frosted',
-        maxDpr: 1.5,
-        params: {
-          thickness: 18, refraction: 0.05, dispersion: 8, blur: 6, tint: [255, 255, 255, 0.35],
-          fresnelStrength: 28, glareStrength: 70, glareAngle: -45, shadowStrength: 0,
-        },
-        shapes: [{ element: card, radius: 'auto' }],
-        onError: () => {},
-      }) ?? null;
-      canvas.style.removeProperty('display');
-      if (!visible || card.dataset.state === 'tab') glass?.pause();
-    } catch {
-      canvas.style.removeProperty('display');
+  const rgba = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/g;
+  /** Luminance of an element's own painted background (colour or gradient), or null if see-through. */
+  const paint = (el: Element): number | null => {
+    const cs = getComputedStyle(el);
+    const solid = [...cs.backgroundColor.matchAll(rgba)][0];
+    if (solid && Number(solid[4] ?? 1) >= 0.5) return lum(+solid[1], +solid[2], +solid[3]);
+    if (cs.backgroundImage.includes('gradient')) {
+      const stops = [...cs.backgroundImage.matchAll(rgba)].filter((m) => Number(m[4] ?? 1) >= 0.5);
+      if (stops.length) return stops.reduce((sum, m) => sum + lum(+m[1], +m[2], +m[3]), 0) / stops.length;
     }
+    return null;
   };
+  const measureTone = (): Tone => {
+    const r = card.getBoundingClientRect();
+    const cols = 4;
+    const rows = Math.max(2, Math.round(r.height / 56));
+    let dark = 0, busy = 0, total = 0;
+    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+      const x = r.left + 8 + ((r.width - 16) * i) / (cols - 1);
+      const y = r.top + 8 + ((r.height - 16) * j) / (rows - 1);
+      // Down through everything painted at this point (overlays included) to the first photo,
+      // canvas or opaque background; the page itself is white.
+      let L: number | null = null;
+      let media = false;
+      for (const el of document.elementsFromPoint(x, y)) {
+        if (card.contains(el)) continue;
+        if (el.matches('img, picture, video, canvas')) { media = true; break; }
+        if ((L = paint(el)) !== null) break;
+      }
+      total++;
+      if (media) { busy++; continue; }
+      L ??= 1;
+      if (L < 0.2) dark++;
+      else if (L < 0.6) busy++;
+    }
+    if (total && dark * 2 >= total) return 'dark';
+    return dark || busy ? 'dense' : 'clear';
+  };
+  let toneFrame = 0;
+  const updateTone = () => {
+    if (toneFrame || !visible) return;
+    toneFrame = requestAnimationFrame(() => { toneFrame = 0; if (visible) card.dataset.tone = measureTone(); });
+  };
+  window.addEventListener('scroll', updateTone, { passive: true, signal });
+  window.addEventListener('resize', updateTone, { signal });
+  signal.addEventListener('abort', () => cancelAnimationFrame(toneFrame));
 
+  // ---- Glass: refraction map drawn to the card's real shape (Chromium) ----
+  const filter = document.getElementById('gd-refract');
+  const mapImage = filter?.querySelector<SVGFEImageElement>('[data-guide-map]');
+  /** Displacement map: neutral inside, pulling the backdrop inward across the rim, like a lens edge. */
+  const drawMap = (w: number, h: number, radius: number) => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const g = c.getContext('2d');
+    if (!g) return '';
+    const img = g.createImageData(w, h);
+    const d = img.data;
+    const r = Math.min(radius, w / 2, h / 2);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const px = x + 0.5 - w / 2;
+        const py = y + 0.5 - h / 2;
+        const qx = Math.abs(px) - (w / 2 - r);
+        const qy = Math.abs(py) - (h / 2 - r);
+        const ox = Math.max(qx, 0);
+        const oy = Math.max(qy, 0);
+        const out = Math.hypot(ox, oy);
+        const depth = r - out - Math.min(Math.max(qx, qy), 0);
+        let dx = 0, dy = 0;
+        if (depth > 0 && depth < RIM) {
+          let nx: number, ny: number;
+          if (out > 0) { nx = (ox / out) * Math.sign(px); ny = (oy / out) * Math.sign(py); }
+          else if (qx > qy) { nx = Math.sign(px); ny = 0; }
+          else { nx = 0; ny = Math.sign(py); }
+          const k = (1 - depth / RIM) ** 2;
+          dx = -nx * k;
+          dy = -ny * k;
+        }
+        const i = (y * w + x) * 4;
+        d[i] = 128 + dx * 127;
+        d[i + 1] = 128 + dy * 127;
+        d[i + 2] = 128;
+        d[i + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return c.toDataURL();
+  };
+  if (filter && mapImage && canRefract()) {
+    let size = '';
+    const fit = () => {
+      const r = card.getBoundingClientRect();
+      const w = Math.round(r.width);
+      const h = Math.round(r.height);
+      if (!w || !h || `${w}x${h}` === size) return;
+      size = `${w}x${h}`;
+      const radius = parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0;
+      for (const el of [filter, mapImage]) { el.setAttribute('width', String(w)); el.setAttribute('height', String(h)); }
+      mapImage.setAttribute('href', drawMap(w, h, radius));
+      card.classList.add('gd-refract');
+    };
+    const ro = new ResizeObserver(fit);
+    ro.observe(card);
+    signal.addEventListener('abort', () => ro.disconnect());
+  }
+
+  // ---- Getting noticed ----
+  let nudgeTimer = 0;
+  let nudgesLeft = 0;
+  const nudge = () => {
+    if (!nudgesLeft || !visible || card.dataset.state !== 'tab') return;
+    nudgesLeft--;
+    card.removeAttribute('data-nudge');
+    void card.offsetWidth; // restart the animation
+    card.setAttribute('data-nudge', '');
+    if (nudgesLeft) nudgeTimer = window.setTimeout(nudge, NUDGE_GAP_MS);
+  };
+  const startAttention = (count: number) => {
+    nudgesLeft = count;
+    card.dataset.attention = '';
+    window.clearTimeout(nudgeTimer);
+    nudgeTimer = window.setTimeout(nudge, NUDGE_FIRST_MS);
+  };
+  const stopAttention = () => {
+    nudgesLeft = 0;
+    window.clearTimeout(nudgeTimer);
+    delete card.dataset.attention;
+    card.removeAttribute('data-nudge');
+  };
+  card.addEventListener('animationend', (e) => { if (e.target === card && e.animationName.includes('gd-ring')) card.removeAttribute('data-nudge'); }, { signal });
+  // Any sign the visitor has seen it ends the nudging for this page.
+  card.addEventListener('pointerenter', stopAttention, { signal });
+  card.addEventListener('focusin', stopAttention, { signal });
+  signal.addEventListener('abort', () => window.clearTimeout(nudgeTimer));
+
+  // ---- States ----
   const setState = (state: State) => {
     card.dataset.state = state;
     const open = state !== 'tab';
     body.hidden = !open;
     tab.setAttribute('aria-expanded', String(open));
-    if (open) {
-      void startGlass();
-      glass?.resume();
-      glass?.refresh();
-    } else {
-      glass?.pause();
-    }
+    document.documentElement.classList.toggle('guide-open', open && visible);
+    if (open) stopAttention();
+    updateTone();
   };
 
   const show = (state: Exclude<State, 'done'>) => {
@@ -144,7 +230,8 @@ function init() {
     if (visible) return;
     visible = true;
     card.hidden = false;
-    if (card.dataset.state !== 'tab') glass?.resume();
+    document.documentElement.classList.toggle('guide-open', card.dataset.state !== 'tab');
+    card.dataset.tone = measureTone();
     // Next frame, so the entrance runs from the hidden state.
     requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('is-in')));
   };
@@ -152,9 +239,11 @@ function init() {
   const hide = (remember: boolean) => {
     if (!visible) return;
     visible = false;
+    stopAttention();
+    document.documentElement.classList.remove('guide-open');
     const hadFocus = card.contains(document.activeElement);
     card.classList.remove('is-in');
-    window.setTimeout(() => { if (!visible) { card.hidden = true; glass?.pause(); } }, reduce() ? 0 : 260);
+    window.setTimeout(() => { if (!visible) card.hidden = true; }, reduce() ? 0 : 260);
     if (remember) local.set(DISMISSED_KEY, String(Date.now()));
     const back = returnTo;
     returnTo = null;
@@ -262,8 +351,9 @@ function init() {
   const allowed = card.dataset.quiet === undefined && !num(DONE_KEY) && loadedAt - num(DISMISSED_KEY) > QUIET_MS;
   if (!allowed) return;
 
-  // Already offered earlier in this session: keep the tab, without counting another appearance.
-  if (session.get(SESSION_KEY)) { show('tab'); return; }
+  // Already offered earlier in this session: keep the tab without counting another appearance,
+  // and nudge once.
+  if (session.get(SESSION_KEY)) { show('tab'); startAttention(1); return; }
   if (shows().length >= MAX_SHOWS) return;
 
   let offered = false;
@@ -276,6 +366,7 @@ function init() {
     local.set(SHOWN_KEY, JSON.stringify([...shows(), Date.now()]));
     session.set(SESSION_KEY, '1');
     show('tab');
+    startAttention(NUDGES);
   };
   window.addEventListener('scroll', () => {
     const room = document.documentElement.scrollHeight - window.innerHeight;

@@ -1,5 +1,5 @@
 ---
-// Field-guide tab and card (D-56, docs/guide-leads.md). A one-line tab in the bottom-left corner
+// Field-guide tab and card (D-56, docs/guide-leads.md). A one-line tab in the bottom-right corner
 // opens a compact card with the lead form; it is not a modal (no overlay, focus steal or scroll
 // lock). Rendered by Base only while the guide is enabled (data/guide.ts). Behavior: scripts/guide.ts.
 import { guide } from '../data/guide';
@@ -15,6 +15,7 @@ const quiet = (guide.quietPaths as readonly string[]).includes(path);
   aria-labelledby="gd-title"
   data-guide-prompt
   data-state="tab"
+  data-tone="clear"
   data-quiet={quiet ? '' : undefined}
   data-endpoint={GUIDE_ENDPOINT}
   data-guide={guide.id}
@@ -22,7 +23,7 @@ const quiet = (guide.quietPaths as readonly string[]).includes(path);
   data-file-name={guide.downloadName}
   hidden
 >
-  <canvas class="gd-glass" aria-hidden="true"></canvas>
+  <span class="gd-sheen" aria-hidden="true"></span>
   <button type="button" class="gd-x" data-guide-close aria-label="Hide the field guide offer">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
   </button>
@@ -58,6 +59,23 @@ const quiet = (guide.quietPaths as readonly string[]).includes(path);
   </div>
 </aside>
 
+<!-- Edge refraction of the live page behind the card (Chromium only: backdrop-filter: url()).
+     scripts/guide.ts sizes the filter and draws its displacement map to the card's real shape. -->
+<svg class="gd-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="gd-refract" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" x="0" y="0" width="350" height="600">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="soft" />
+    <feImage data-guide-map href="" x="0" y="0" width="350" height="600" preserveAspectRatio="none" result="map" />
+    <feDisplacementMap in="soft" in2="map" scale="46" xChannelSelector="R" yChannelSelector="G" result="dr" />
+    <feColorMatrix in="dr" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r" />
+    <feDisplacementMap in="soft" in2="map" scale="42" xChannelSelector="R" yChannelSelector="G" result="dg" />
+    <feColorMatrix in="dg" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g" />
+    <feDisplacementMap in="soft" in2="map" scale="38" xChannelSelector="R" yChannelSelector="G" result="db" />
+    <feColorMatrix in="db" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b" />
+    <feBlend in="r" in2="g" mode="screen" result="rg" />
+    <feBlend in="rg" in2="b" mode="screen" />
+  </filter>
+</svg>
+
 <script>
   import '../scripts/guide.ts';
 </script>
@@ -67,8 +85,17 @@ const quiet = (guide.quietPaths as readonly string[]).includes(path);
     --gd-left: max(16px, env(safe-area-inset-left, 0px));
     --gd-right: max(16px, env(safe-area-inset-right, 0px));
     --gd-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    /* Tone, set by scripts/guide.ts from what is behind the card: clear (light page), dense (photos
+       or mixed light and dark), dark (navy bands, footer). Each keeps text at WCAG AA. */
+    --gd-fill: rgba(255, 255, 255, .5);
+    --gd-ink: var(--ink);
+    --gd-sub: var(--muted);
+    --gd-accent: var(--blue);
+    --gd-edge: rgba(255, 255, 255, .7);
+    --gd-sheen: .9;
+    --gd-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .9), inset 0 0 0 1px var(--gd-edge), inset 0 -12px 24px -18px color-mix(in srgb, var(--sky) 45%, transparent), 0 22px 44px -22px rgba(11, 26, 47, .45), 0 2px 6px -2px rgba(11, 26, 47, .12);
     position: fixed;
-    left: var(--gd-left);
+    right: var(--gd-right);
     bottom: var(--gd-bottom);
     /* Above the page, below the sticky header (60), reading progress (70) and skip link. */
     z-index: 58;
@@ -78,76 +105,106 @@ const quiet = (guide.quietPaths as readonly string[]).includes(path);
     max-height: calc(100dvh - var(--header-h) - 2 * var(--gd-bottom));
     overflow: hidden;
     border-radius: var(--radius-lg);
-    color: var(--ink);
+    color: var(--gd-ink);
     font-family: var(--f-body);
-    /* Opaque enough that --muted text keeps AA even over the navy footer. */
-    background: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(255, 255, 255, .88));
-    -webkit-backdrop-filter: blur(18px) saturate(170%);
-    backdrop-filter: blur(18px) saturate(170%);
-    border: 1px solid var(--line);
-    box-shadow: 0 1px 2px rgba(11, 26, 47, .05), 0 18px 40px -22px rgba(11, 26, 47, .38);
+    /* Real transparency: the live page shows through, blurred and saturated. */
+    background: var(--gd-fill);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    box-shadow: var(--gd-shadow);
     opacity: 0;
     translate: 0 8px;
-    transition: opacity 240ms var(--ease-out), translate 320ms var(--ease-out);
+    transition: opacity 240ms var(--ease-out), translate 320ms var(--ease-out), background-color 260ms var(--ease-out), color 260ms var(--ease-out);
+  }
+  /* Chromium: the same glass, plus refraction and a slight colour split along the rim. */
+  .guide.gd-refract { backdrop-filter: url(#gd-refract) saturate(180%); }
+  .guide[data-tone='dense'] { --gd-fill: rgba(255, 255, 255, .84); }
+  .guide[data-tone='dark'] {
+    --gd-fill: color-mix(in srgb, var(--navy) 80%, transparent);
+    --gd-ink: #fff;
+    --gd-sub: var(--on-navy);
+    --gd-accent: var(--sky-soft);
+    --gd-edge: rgba(255, 255, 255, .22);
+    --gd-sheen: .3;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    .guide { background: var(--mist); }
+    .guide { --gd-fill: var(--mist); }
+    .guide[data-tone='dark'] { --gd-fill: var(--navy); }
   }
   .guide[hidden] { display: none; }
   .guide.is-in { opacity: 1; translate: 0 0; }
+  .gd-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
-  /* WebGL liquid glass (vendor/liquid-glass.js), drawn only on the open card once the engine has
-     bound it (data-lg="glass"). Without WebGL2 the CSS glass above stays. */
-  .gd-glass { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; display: none; border-radius: inherit; pointer-events: none; }
-  .guide[data-lg='glass']:not([data-state='tab']) { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: transparent; }
-  .guide[data-lg='glass']:not([data-state='tab']) .gd-glass { display: block; }
+  /* Specular light across the top-left, as on the site's other glass. */
+  .gd-sheen { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: var(--gd-sheen); background: radial-gradient(120% 60% at 10% -12%, rgba(255, 255, 255, .6), transparent 55%), linear-gradient(180deg, rgba(255, 255, 255, .2), transparent 38%); transition: opacity 260ms var(--ease-out); }
 
-  .gd-inner { flex: 1; min-width: 0; overflow: hidden auto; overscroll-behavior: contain; padding: 22px 22px 20px; }
+  .gd-inner { position: relative; z-index: 1; flex: 1; min-width: 0; overflow: hidden auto; overscroll-behavior: contain; padding: 22px 22px 20px; }
 
-  .gd-x { position: absolute; top: 8px; right: 8px; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; transition: background-color var(--t-hover), color var(--t-hover); }
+  .gd-x { position: absolute; top: 8px; right: 8px; z-index: 2; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--gd-sub); cursor: pointer; transition: background-color var(--t-hover), color var(--t-hover); }
   .gd-x::before { content: ''; position: absolute; inset: -6px; }
-  .gd-x:hover { background: var(--wash); color: var(--ink); }
+  .gd-x:hover { background: color-mix(in srgb, var(--gd-ink) 10%, transparent); color: var(--gd-ink); }
 
   /* At rest: one line, the tab. */
   .guide[data-state='tab'] { width: auto; border-radius: 999px; }
   .guide[data-state='tab'] .gd-inner { padding: 0 40px 0 0; overflow: visible; }
   .guide[data-state='tab'] .gd-x { top: 50%; right: 6px; translate: 0 -50%; }
-  .gd-tab { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 6px 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font: 600 14px/1 var(--f-body); cursor: pointer; transition: color var(--t-hover); }
-  .gd-tab:hover { color: var(--blue); }
-  .gd-doc { color: var(--blue); flex: none; }
+  .gd-tab { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 6px 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--gd-ink); font: 600 14px/1 var(--f-body); cursor: pointer; transition: color var(--t-hover); }
+  .gd-tab:hover { color: var(--gd-accent); }
+  .gd-doc { color: var(--gd-accent); flex: none; }
   .gd-go { flex: none; transition: transform var(--t-hover) var(--ease-out); }
   .gd-tab:hover .gd-go { transform: translateX(3px); }
   .guide:not([data-state='tab']) .gd-tab { display: none; }
 
-  :is(.gd-x, .gd-tab):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  :is(.gd-x, .gd-tab):focus-visible { outline: 2px solid var(--gd-accent); outline-offset: 2px; }
+
+  /* Getting noticed: a short shake with a soft ring, a few times, until the visitor reacts. */
+  .guide[data-nudge] { animation: gd-shake 720ms var(--ease-out), gd-ring 1400ms var(--ease-out); }
+  @keyframes gd-shake {
+    0%, 100% { rotate: 0deg; }
+    14% { rotate: -4deg; }
+    28% { rotate: 3.5deg; }
+    42% { rotate: -2.5deg; }
+    56% { rotate: 1.5deg; }
+    70% { rotate: -.75deg; }
+  }
+  @keyframes gd-ring {
+    0% { box-shadow: var(--gd-shadow), 0 0 0 0 color-mix(in srgb, var(--sky) 60%, transparent); }
+    100% { box-shadow: var(--gd-shadow), 0 0 0 18px color-mix(in srgb, var(--sky) 0%, transparent); }
+  }
 
   .gd-body[hidden] { display: none; }
-  .gd-kicker { padding-right: 32px; font: 600 12px/1.4 var(--f-body); letter-spacing: .16em; text-transform: uppercase; color: var(--blue); }
+  .gd-kicker { padding-right: 32px; font: 600 12px/1.4 var(--f-body); letter-spacing: .16em; text-transform: uppercase; color: var(--gd-accent); }
   .gd-title { margin-top: 6px; font: var(--display-weight) 25px/1.15 var(--f-display); letter-spacing: var(--display-track); }
-  .gd-title a { color: var(--ink); text-decoration: none; }
-  .gd-title a:hover { color: var(--blue); text-decoration: underline; text-decoration-thickness: 1px; }
-  .gd-title a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: var(--radius-sm); }
-  .gd-promise { margin-top: 10px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .gd-title a { color: var(--gd-ink); text-decoration: none; }
+  .gd-title a:hover { color: var(--gd-accent); text-decoration: underline; text-decoration-thickness: 1px; }
+  .gd-title a:focus-visible { outline: 2px solid var(--gd-accent); outline-offset: 3px; border-radius: var(--radius-sm); }
+  .gd-promise { margin-top: 10px; font-size: 15px; line-height: 1.55; color: var(--gd-sub); }
   .gd-facts { list-style: none; margin: 14px 0 18px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-  .gd-facts li { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, .72); font: 500 12.5px/1.3 var(--f-body); color: var(--ink); }
+  .gd-facts li { padding: 5px 10px; border: 1px solid color-mix(in srgb, var(--gd-ink) 16%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--paper) 55%, transparent); font: 500 12.5px/1.3 var(--f-body); color: var(--ink); }
+  .guide[data-tone='dark'] .gd-facts li { background: rgba(255, 255, 255, .1); color: var(--gd-ink); }
 
   .gd-form { display: grid; gap: 12px; }
   .gd-form[hidden] { display: none; }
-  .gd-form .field label { font-size: 13.5px; }
+  .gd-form .field label { font-size: 13.5px; color: var(--gd-ink); }
   .gd-form .field input { min-height: 46px; padding-block: 10px; }
-  .gd-err { font-size: 13.5px; font-weight: 500; color: var(--danger); }
+  /* Its own light ground, so the message reads in every tone. */
+  .gd-err { justify-self: start; padding: 6px 10px; border-radius: var(--radius); background: rgba(255, 255, 255, .92); font-size: 13.5px; font-weight: 500; color: var(--danger); }
   .gd-err[hidden] { display: none; }
   .gd-submit { justify-self: start; min-height: 48px; padding-inline: 22px; }
-  .gd-notice { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .gd-notice { font-size: 12.5px; line-height: 1.5; color: var(--gd-sub); }
+  .gd-notice a { color: var(--gd-accent); }
 
-  .gd-done { display: grid; gap: 6px; margin-top: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255, 255, 255, .78); font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+  .gd-done { display: grid; gap: 6px; margin-top: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255, 255, 255, .9); font-size: 14.5px; line-height: 1.5; color: var(--muted); }
   .gd-done[hidden] { display: none; }
-  .gd-done:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .gd-done:focus-visible { outline: 2px solid var(--gd-accent); outline-offset: 2px; }
   .gd-done-title { font-weight: 600; color: var(--ink); }
   .guide[data-state='done'] .gd-pitch { display: none; }
 
   .guide:not([data-state='tab']) .gd-body, .gd-done:not([hidden]) { animation: gd-in 280ms var(--ease-out) both; }
   @keyframes gd-in { from { opacity: 0; translate: 0 8px; } }
+
+  /* The home page's section rail shares the right edge: it steps aside while the card is open. */
+  :global(html.guide-open .rail) { opacity: 0 !important; pointer-events: none !important; }
 
   /* Phones: the open card spans the width, still clear of the bottom edge. */
   @media (max-width: 560px) {
@@ -157,6 +214,8 @@ const quiet = (guide.quietPaths as readonly string[]).includes(path);
     .guide { translate: none; transition: opacity 200ms linear; }
     .guide:not([data-state='tab']) .gd-body, .gd-done:not([hidden]) { animation-name: gd-fade; }
     .gd-go { transition: none; }
+    /* No shake: a steady ring marks the tab until the visitor reacts. */
+    .guide[data-attention] { box-shadow: var(--gd-shadow), 0 0 0 3px color-mix(in srgb, var(--sky) 55%, transparent); }
   }
   @keyframes gd-fade { from { opacity: 0; } }
   @media print { .guide { display: none !important; } }
