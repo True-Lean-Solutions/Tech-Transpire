@@ -1,0 +1,93 @@
+# Field-guide lead card
+
+The site offers one guide, **Clarity Before Change**, for a name and a work email (D-56). On submit the PDF downloads in the visitor's browser and the lead is written to a Google Sheet. No email is sent. This page is the operating manual: how the pieces fit, how to switch it on, what the sheet records, and how to change the guide.
+
+The behavior is ported from the True Lean Solutions site (`True-Lean-Solutions/TLS-Website`: `GuidePrompt.astro`, `GuideForm.astro`, `guide-leads.gs`). Its look, colors and copy are Tech Transpire's own.
+
+## How it fits together
+
+| Piece | Where | What it does |
+|---|---|---|
+| Guide settings | `site/src/data/guide.ts` | The copy (kicker, title, promise, facts, button), the Insights post the title links to, the PDF's path and download name, the pages where the tab never offers itself |
+| Endpoint | `GUIDE_ENDPOINT` in `site/src/lib/site.ts` | The Apps Script `/exec` URL. **Empty means off:** no tab, no card, no footer link, and no script loaded |
+| PDF | `site/public/guides/clarity-before-change-field-guide.pdf` | Served from the site itself. The card also stays off while this file is missing |
+| Tab, card and form | `site/src/components/GuidePrompt.astro` | Markup and styles. Rendered by `site/src/layouts/Base.astro` only while the guide is enabled |
+| Behavior | `site/src/scripts/guide.ts` | When the tab appears, the form, the download, the liquid glass. Re-wired on every page, including client-side navigations |
+| Footer link | `site/src/components/Footer.astro` | "Free field guide" in the legal bar opens the card on any page |
+| Glass engine | `site/src/vendor/liquid-glass.js` (v1.1.0, MIT, see `liquid-glass.LICENSE.txt`) | Draws the open card. Loaded only the first time the card opens |
+| Script | `docs/apps-script/guide-leads.gs` | Checks for spam and writes the lead to the sheet. This file is the copy of record |
+
+## What the visitor sees
+
+- A one-line tab at the bottom left: a document icon, "Free field guide", an arrow and a close button. It is not a pop-up: no overlay, no backdrop, no focus steal, no scroll lock.
+- The tab appears after 30% of the page is scrolled or 20 seconds, whichever comes first. Not on Contact, Privacy Policy or the 404 page, and not while the visitor is typing in a field.
+- At most three automatic appearances in 14 days. Once the tab has appeared, it stays on the following pages of that browser session without counting again. Closing it hides it for 14 days. After a download it never appears again on that browser.
+- The tab opens a compact card: kicker, the title (linking to *You Don't Have an Execution Problem. You're Executing the Wrong Plan.*), the promise, three fact chips, then Name, Work email and "Download the guide".
+- On submit the PDF downloads at once and the card reads "Your guide is downloading." with a plain link to the same file.
+- Escape folds a card opened from the tab back to the tab, or closes a card opened from the footer and returns focus to the footer link.
+- State lives in `localStorage` (`tt:guide:done`, `tt:guide:dismissed`, `tt:guide:shown`) and `sessionStorage` (`tt:guide:on`). With storage blocked, every visit behaves as the first.
+
+## Switching it on
+
+1. **Put the designed PDF in place:** `site/public/guides/clarity-before-change-field-guide.pdf`. Check that it has no internal notes, and that the card's facts ("4 practical steps", "4 printable worksheets", "A 30-day plan") match it.
+2. **Add a clause to the Privacy Policy** covering this collection (name and work email for the guide, follow-up email, kept in a Google Sheet). See the open item in D-56.
+3. **Install the script.** Use a Google account that can edit the spreadsheet "TLS LEADS From Website".
+   1. Open that spreadsheet and choose Extensions → Apps Script. This creates a script bound to that spreadsheet.
+   2. Replace the editor's contents with `docs/apps-script/guide-leads.gs`, then save.
+   3. Run `testSpamRules`. The last log line should read "All spam rules pass". It writes nothing.
+   4. Run `writeTestRow` and approve the one permission it asks for (this spreadsheet). Check that the test row is in the "TT Guide Leads" tab, then delete the row.
+   5. Choose Deploy → New deployment → Web app, with "Execute as: Me" and "Who has access: Anyone". Deploy, then copy the URL ending in `/exec`.
+4. **Set `GUIDE_ENDPOINT`** in `site/src/lib/site.ts` to that URL. Open a pull request, merge it, and deploy the site.
+5. **Test on the live site.** Ask for the guide. The PDF should download and a row should appear in "TT Guide Leads".
+
+The script creates the "TT Guide Leads" and "TT Guide Leads Rejected" tabs the first time it needs them. It never writes to the TLS tabs ("Guide Leads", "Guide Leads Rejected", "Rejected") in the same spreadsheet.
+
+To change the script later, use Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy, so the URL stays the same. Keep `docs/apps-script/guide-leads.gs` as the copy of record.
+
+## What the site sends
+
+A fire-and-forget `POST` of `URLSearchParams` (never JSON) with these fields:
+
+| Field | Value |
+|---|---|
+| `form` | `tt-guide` |
+| `guide` | `clarity-before-change` |
+| `source` | `popup` |
+| `page` | The page path |
+| `name`, `email` | What the visitor entered |
+| `website` | The honeypot, sent empty. If a bot fills it, the browser shows the confirmation and sends and downloads nothing |
+| `form_ts` | `Date.now()` when the page loaded |
+| `notice_shown` | ISO time the notice under the button was first on screen |
+| `submitted` | ISO time of the submit |
+
+## What the sheet records
+
+**TT Guide Leads:** Submitted At (UTC), Name, Email (lower case), Guide, Page, Source, Notice Shown At (UTC), and Asked Before ("Yes" when the same address already asked for this guide).
+
+**TT Guide Leads Rejected:** posts the script treated as spam, with the reason:
+
+| Reason | Meaning |
+|---|---|
+| `wrong_form` | Not this form |
+| `honeypot` | The honeypot was filled |
+| `form_ts_missing` | No load time |
+| `submitted_missing` | No submit time |
+| `too_fast` | Under 3 seconds from load to submit |
+| `form_ts_stale` | The page was open more than 7 days |
+| `form_ts_future` | The visitor's clock is more than 10 minutes ahead of the server's |
+| `unknown_guide` | A guide id the script doesn't list |
+| `name_missing` | Name under 2 characters |
+| `name_has_link` | A link in the name |
+| `email_invalid` | Not one plausible address |
+
+Every cell is guarded against formulas (`=`, `+`, `-`, `@` become text) and capped at 45,000 characters.
+
+The download does not depend on the address, so some rows will carry mistyped or made-up emails. Nothing checks them.
+
+There is no consent checkbox (Hemang's decision). The line under the button says Tech Transpire may email to follow up, and "Notice Shown At" records when that line was on the visitor's screen. The Contact form does use a consent checkbox.
+
+## Changing the guide
+
+1. Put the new PDF in `site/public/guides/`.
+2. Update `site/src/data/guide.ts`, giving it a new `id`.
+3. Add the same `id` and its title to `GUIDES` in the script, then publish a new version of the existing deployment.

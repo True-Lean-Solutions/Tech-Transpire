@@ -4,6 +4,8 @@ import '@fontsource-variable/libre-franklin';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import GuidePrompt from '../components/GuidePrompt.astro';
+import { guideEnabled } from '../data/guide';
 import { isReview, showMarkers, SITE_NAME, location, isStaticHost, pagePath } from '../lib/site';
 import { logo } from '../lib/images';
 import { getImage } from 'astro:assets';
@@ -79,6 +81,7 @@ const org = {
       <slot />
     </main>
     <Footer />
+    {guideEnabled && <GuidePrompt />}
     <script>
       import '../scripts/interactions.ts';
     </script>

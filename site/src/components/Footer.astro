@@ -4,6 +4,7 @@ import Flag from './Flag.astro';
 import { contact, entityLine, showIndustries, showPrivacy, location } from '../lib/site';
 import { hasCaseStudiesPage } from '../lib/routes';
 import { logo } from '../lib/images';
+import { guide, guideEnabled } from '../data/guide';
 
 const year = new Date().getFullYear();
 ---
@@ -41,7 +42,19 @@ const year = new Date().getFullYear();
   <div class="container">
     <div class="legal">
       <p>{entityLine} © {year} Akhani LLC.<Flag label="N-06 · legal wording review" /></p>
-      {showPrivacy && <ul><li><a href="/privacy-policy">Privacy Policy</a></li></ul>}
+      {(showPrivacy || guideEnabled) && (
+        <ul>
+          {showPrivacy && <li><a href="/privacy-policy">Privacy Policy</a></li>}
+          {/* Opens the field-guide card (GuidePrompt); revealed by scripts/guide.ts, so it never shows without JavaScript. */}
+          {guideEnabled && <li data-guide-open-wrap hidden><button type="button" class="foot-guide" data-guide-open aria-controls="guide-prompt">{guide.kicker}</button></li>}
+        </ul>
+      )}
     </div>
   </div>
 </footer>
+
+<style>
+  .foot-guide { display: inline-flex; align-items: center; min-height: 44px; margin-block: -13px; padding: 0; border: 0; background: none; color: var(--on-navy); font: inherit; cursor: pointer; }
+  .foot-guide:hover { color: #fff; text-decoration: underline; }
+  .foot-guide:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+</style>
