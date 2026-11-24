@@ -7,8 +7,7 @@ type Tone = 'clear' | 'dense' | 'dark';
 const DONE_KEY = 'tt:guide:done';
 const DISMISSED_KEY = 'tt:guide:dismissed';
 const SHOWN_KEY = 'tt:guide:shown';
-/** Set for the rest of the browser session once the tab has offered itself, so moving to another
- *  page keeps the tab without counting another appearance. */
+/** Set for the rest of the browser session once the tab has nudged, so later pages stay still. */
 const SESSION_KEY = 'tt:guide:on';
 
 const DAY = 86_400_000;
@@ -17,7 +16,7 @@ const MAX_SHOWS = 3;
 const SCROLL_SHARE = 0.3;
 const WAIT_MS = 20_000;
 const RETRY_MS = 1500;
-/** Attention nudges: the first soon after the tab arrives, then a few more, until the visitor reacts. */
+/** Attention nudges: the first when the tab offers itself, then a few more, until the visitor reacts. */
 const NUDGE_FIRST_MS = 700;
 const NUDGE_GAP_MS = 8000;
 const NUDGES = 4;
@@ -69,7 +68,7 @@ function init() {
   let timer = 0;
   signal.addEventListener('abort', () => {
     window.clearTimeout(timer);
-    document.documentElement.classList.remove('guide-open');
+    document.documentElement.classList.remove('guide-open', 'guide-on');
   });
 
   // ---- Glass: tone from what is behind the card ----
@@ -230,38 +229,54 @@ function init() {
     if (visible) return;
     visible = true;
     card.hidden = false;
+    document.documentElement.classList.add('guide-on');
     document.documentElement.classList.toggle('guide-open', card.dataset.state !== 'tab');
     card.dataset.tone = measureTone();
     // Next frame, so the entrance runs from the hidden state.
     requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('is-in')));
   };
 
-  const hide = (remember: boolean) => {
-    if (!visible) return;
-    visible = false;
-    stopAttention();
-    document.documentElement.classList.remove('guide-open');
+  const quiet = card.dataset.quiet !== undefined;
+  let downloaded = false;
+  /** The visitor has opened the card on this page: no nudge needed after that. */
+  let engaged = false;
+
+  /** The card folds back into the tab, which stays in its corner. Only on the quiet pages (no tab
+   *  there) does it leave the screen. Folding an unanswered card is a "not now": no nudges for 14 days. */
+  const minimize = () => {
+    if (card.dataset.state === 'tab') return;
+    if (card.dataset.state === 'open') local.set(DISMISSED_KEY, String(Date.now()));
     const hadFocus = card.contains(document.activeElement);
-    card.classList.remove('is-in');
-    window.setTimeout(() => { if (!visible) card.hidden = true; }, reduce() ? 0 : 260);
-    if (remember) local.set(DISMISSED_KEY, String(Date.now()));
     const back = returnTo;
     returnTo = null;
+    if (quiet) {
+      visible = false;
+      stopAttention();
+      document.documentElement.classList.remove('guide-open', 'guide-on');
+      card.classList.remove('is-in');
+      window.setTimeout(() => { if (!visible) card.hidden = true; }, reduce() ? 0 : 260);
+    } else {
+      setState('tab');
+    }
     if (back?.isConnected) back.focus({ preventScroll: true });
-    else if (hadFocus) document.getElementById('main')?.focus({ preventScroll: true });
+    else if (hadFocus) (quiet ? document.getElementById('main') : tab)?.focus({ preventScroll: true });
   };
 
-  const focusName = () => requestAnimationFrame(() => name.focus({ preventScroll: true }));
+  /** Opens the card: the form, or the confirmation if the guide was already downloaded on this page. */
+  const expand = () => {
+    engaged = true;
+    stopAttention();
+    show(downloaded ? 'tab' : 'open');
+    if (downloaded) { setState('done'); requestAnimationFrame(() => done.focus({ preventScroll: true })); return; }
+    requestAnimationFrame(() => name.focus({ preventScroll: true }));
+  };
 
-  tab.addEventListener('click', () => { setState('open'); focusName(); }, { signal });
-  // Closing after the download is not a "no", so nothing is remembered then.
-  close.addEventListener('click', () => hide(card.dataset.state !== 'done'), { signal });
+  tab.addEventListener('click', expand, { signal });
+  close.addEventListener('click', minimize, { signal });
   card.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
+    if (e.key !== 'Escape' || card.dataset.state === 'tab') return;
     e.stopPropagation();
-    // Opened from the tab: fold back to it. Opened from the footer: close and go back there.
-    if (card.dataset.state === 'open' && !returnTo) { setState('tab'); tab.focus(); return; }
-    hide(card.dataset.state === 'tab');
+    minimize();
   }, { signal });
 
   openers.forEach((opener) => {
@@ -269,8 +284,7 @@ function init() {
     opener.addEventListener('click', (e) => {
       e.preventDefault();
       returnTo = opener;
-      show('open');
-      focusName();
+      expand();
     }, { signal });
   });
 
@@ -332,6 +346,7 @@ function init() {
       fetch(card.dataset.endpoint ?? '', { method: 'POST', body: params, mode: 'no-cors', keepalive: true }).catch(() => {});
     }
     local.set(DONE_KEY, String(Date.now()));
+    downloaded = true;
     form.hidden = true;
     done.hidden = false;
     setState('done');
@@ -348,24 +363,26 @@ function init() {
       return [];
     }
   };
-  const allowed = card.dataset.quiet === undefined && !num(DONE_KEY) && loadedAt - num(DISMISSED_KEY) > QUIET_MS;
-  if (!allowed) return;
+  // The tab sits in its corner on every page, like a chat launcher, and stays there: scrolling
+  // never moves it and × only folds the card back into it. Not on the quiet pages.
+  if (quiet) return;
+  show('tab');
 
-  // Already offered earlier in this session: keep the tab without counting another appearance,
-  // and nudge once.
-  if (session.get(SESSION_KEY)) { show('tab'); startAttention(1); return; }
-  if (shows().length >= MAX_SHOWS) return;
+  // The offer is the nudge: once per browser session, at most 3 sessions in 14 days, never after
+  // a download, and not for 14 days after the visitor folded the card away unanswered.
+  const nudgeable = !num(DONE_KEY) && loadedAt - num(DISMISSED_KEY) > QUIET_MS && !session.get(SESSION_KEY) && shows().length < MAX_SHOWS;
+  if (!nudgeable) return;
 
   let offered = false;
   const typing = () => !!document.activeElement?.matches('input, textarea, select, [contenteditable="true"]');
   const offer = () => {
-    if (offered || visible || signal.aborted) return;
+    if (offered || signal.aborted) return;
     window.clearTimeout(timer);
+    if (engaged) return; // already opened on this page: no need to call attention
     if (document.hidden || typing()) { timer = window.setTimeout(offer, RETRY_MS); return; }
     offered = true;
     local.set(SHOWN_KEY, JSON.stringify([...shows(), Date.now()]));
     session.set(SESSION_KEY, '1');
-    show('tab');
     startAttention(NUDGES);
   };
   window.addEventListener('scroll', () => {

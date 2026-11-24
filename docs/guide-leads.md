@@ -12,22 +12,22 @@ The behavior is ported from the True Lean Solutions site (`True-Lean-Solutions/T
 | Endpoint | `GUIDE_ENDPOINT` in `site/src/lib/site.ts` | The Apps Script `/exec` URL. **Empty means off:** no tab, no card, no footer link, and no script loaded |
 | PDF | `site/public/guides/clarity-before-change-field-guide.pdf` | Served from the site itself. The card also stays off while this file is missing |
 | Tab, card and form | `site/src/components/GuidePrompt.astro` | Markup and styles. Rendered by `site/src/layouts/Base.astro` only while the guide is enabled |
-| Behavior | `site/src/scripts/guide.ts` | When the tab appears, the form, the download, the liquid glass. Re-wired on every page, including client-side navigations |
+| Behavior | `site/src/scripts/guide.ts` | The tab, when it nudges, the form, the download, the glass. Re-wired on every page, including client-side navigations |
 | Footer link | `site/src/components/Footer.astro` | "Free field guide" in the legal bar opens the card on any page |
 | Glass | `GuidePrompt.astro` (CSS and an SVG filter) and `scripts/guide.ts` | Transparent glass over the live page. See "The glass" below |
 | Script | `docs/apps-script/guide-leads.gs` | Checks for spam and writes the lead to the sheet. This file is the copy of record |
 
 ## What the visitor sees
 
-- A one-line tab at the bottom right, where sites usually put a chat launcher (Tech Transpire has no bot): a document icon, "Free field guide", an arrow and a close button. It is not a pop-up: no overlay, no backdrop, no focus steal, no scroll lock.
-- To be noticed, the tab gives a short shake with a soft blue ring when it arrives, then again every 8 seconds, four times in all. It stops for good on that page as soon as the visitor hovers over it, focuses it or opens it. With reduced motion there is no shake, just a steady ring. The × hides it, which also satisfies WCAG 2.2.2.
+- A one-line tab at the bottom right of every page, where sites usually put a chat launcher (Tech Transpire has no bot): a document icon in a blue disc, "Free field guide" and an arrow. It is there from page load and never leaves: scrolling doesn't move it, and it has no ×. It is not a pop-up: no overlay, no backdrop, no focus steal, no scroll lock. Not on Contact, Privacy Policy or the 404 page.
+- The × on the open card (or Escape) folds it back into the tab. Focus returns to the tab, or to the footer link if the card was opened from there.
+- The tab is firmer than the open card (denser glass, a blue rim) so it stays visible over pale sections. The footer's last line is padded so the tab never covers it at the bottom of a page.
+- To be noticed, the tab nudges once 30% of the page is scrolled or 20 seconds have passed, whichever comes first: a short shake with a soft blue ring, then again every 8 seconds, four times in all. It stops for good on that page as soon as the visitor hovers over it, focuses it or opens it. With reduced motion there is no shake, just a steady ring. Not while the visitor is typing in a field.
+- The nudge runs once per browser session and in at most three sessions in 14 days. Folding the card away without downloading counts as "not now": no nudges for 14 days. After a download it never nudges again on that browser. The tab itself stays in every case.
 - On the home page the section rail shares the right edge; it fades out while the card is open, so the two never overlap.
-- The tab appears after 30% of the page is scrolled or 20 seconds, whichever comes first. Not on Contact, Privacy Policy or the 404 page, and not while the visitor is typing in a field.
-- At most three automatic appearances in 14 days. Once the tab has appeared, it stays on the following pages of that browser session without counting again. Closing it hides it for 14 days. After a download it never appears again on that browser.
 - The tab opens a compact card: kicker, the title (linking to *You Don't Have an Execution Problem. You're Executing the Wrong Plan.*), the promise, three fact chips, then Name, Work email and "Download the guide".
-- On submit the PDF downloads at once and the card reads "Your guide is downloading." with a plain link to the same file.
-- Escape folds a card opened from the tab back to the tab, or closes a card opened from the footer and returns focus to the footer link.
-- State lives in `localStorage` (`tt:guide:done`, `tt:guide:dismissed`, `tt:guide:shown`) and `sessionStorage` (`tt:guide:on`). With storage blocked, every visit behaves as the first.
+- On submit the PDF downloads at once and the card reads "Your guide is downloading." with a plain link to the same file. Reopening the tab on that page shows the same confirmation.
+- State lives in `localStorage` (`tt:guide:done`, `tt:guide:dismissed` for "not now", `tt:guide:shown` for nudging sessions) and `sessionStorage` (`tt:guide:on`, set once the tab has nudged in this session). It only governs the nudge; the tab shows regardless. With storage blocked, every visit behaves as the first.
 
 ## The glass
 
