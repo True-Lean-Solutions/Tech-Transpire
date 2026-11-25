@@ -12,7 +12,7 @@ const APPS_SCRIPT_INQUIRY_URL = 'https://script.google.com/macros/s/AKfycbz8nPkA
 export const inquiryEndpoint = isStaticHost ? APPS_SCRIPT_INQUIRY_URL : '/api/inquiry';
 // Field-guide leads (D-56): the /exec URL of docs/apps-script/guide-leads.gs. Empty = switched off:
 // no tab, no card, no footer link. Hemang deploys the script and supplies the URL (docs/guide-leads.md).
-export const GUIDE_ENDPOINT = '';
+export const GUIDE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbykmcdL0fZkcjunvuPe5cH6gc3qk4fRUKxdfaCpgjp99l6ZSJHaZpkGvbGFCWqJEpAK/exec';
 
 // GitHub Pages serves each page from its directory and 301s /page to /page/, so on that host
 // canonical and structured-data URLs carry the trailing slash to match what is actually served.
