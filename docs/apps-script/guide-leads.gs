@@ -2,8 +2,10 @@
  * Tech Transpire field-guide lead form: Google Apps Script web app (D-56).
  *
  * Receives the guide card's form (site/src/components/GuidePrompt.astro, scripts/guide.ts) and
- * writes the lead to the "TT Guide Leads" tab of the spreadsheet this script is bound to
- * ("TLS LEADS From Website"). It sends no email: the visitor's browser downloads the PDF from
+ * writes the lead to the "TT Guide Leads" tab of the spreadsheet "TLS LEADS From Website"
+ * (CONFIG.SHEET_ID). It is a standalone project created at script.google.com, not a script
+ * bound to that spreadsheet: the TLS site's own script is bound there, and the two must stay
+ * separate (one doPost each). It sends no email: the visitor's browser downloads the PDF from
  * the site itself. Deploy steps: docs/guide-leads.md. Adapted from the TLS site's
  * docs/apps-script/guide-leads.gs (True-Lean-Solutions/TLS-Website); every spam check is kept.
  *
@@ -16,6 +18,10 @@
 
 const CONFIG = Object.freeze({
   FORM: 'tt-guide',
+  /** "TLS LEADS From Website" (also used by the Contact form script, apps-script/contact-form.gs). */
+  SHEET_ID: '1dNaI5ntcUzhuaF4FFx5XGKIac5K9SLcuBqVQwdRYqBY',
+  /** Written on every row: the spreadsheet is shared with the True Lean Solutions website. */
+  LEAD_SOURCE: 'Tech Transpire website (techtranspire.com)',
   LEADS_SHEET: 'TT Guide Leads',
   REJECTED_SHEET: 'TT Guide Leads Rejected',
   /** A human needs at least this long between page load and submit. */
@@ -33,16 +39,16 @@ const CONFIG = Object.freeze({
 
 /** Every guide the form may ask for, by the id the site sends (site/src/data/guide.ts). */
 const GUIDES = Object.freeze({
-  'clarity-before-change': { title: 'Clarity Before Change: The Field Guide' },
+  'solve-the-right-problem': { title: 'Solve the Right Problem (playbook)' },
 });
 
 const LEAD_HEADERS = [
-  'Submitted At (UTC)', 'Name', 'Email', 'Guide', 'Page', 'Source',
+  'Submitted At (UTC)', 'Lead Source', 'Name', 'Email', 'Guide', 'Page', 'Opened From',
   'Notice Shown At (UTC)', 'Asked Before',
 ];
 const REJECT_HEADERS = [
-  'Logged At (UTC)', 'Reason', 'Seconds To Submit', 'Name', 'Email', 'Guide',
-  'Page', 'Source', 'website (honeypot)', 'form_ts', 'submitted',
+  'Logged At (UTC)', 'Lead Source', 'Reason', 'Seconds To Submit', 'Name', 'Email', 'Guide',
+  'Page', 'Opened From', 'website (honeypot)', 'form_ts', 'submitted',
 ];
 
 function doPost(e) {
@@ -76,10 +82,10 @@ function handle_(p) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const book = SpreadsheetApp.getActiveSpreadsheet();
+    const book = SpreadsheetApp.openById(CONFIG.SHEET_ID);
     if (verdict.reason) {
       sheet_(book, CONFIG.REJECTED_SHEET, REJECT_HEADERS).appendRow([
-        now.toISOString(), verdict.reason, verdict.seconds, lead.name, lead.email, lead.guide,
+        now.toISOString(), CONFIG.LEAD_SOURCE, verdict.reason, verdict.seconds, lead.name, lead.email, lead.guide,
         lead.page, lead.source, lead.website, lead.formTs, lead.submitted,
       ].map(safeCell_));
       return;
@@ -88,7 +94,7 @@ function handle_(p) {
     const leads = sheet_(book, CONFIG.LEADS_SHEET, LEAD_HEADERS);
     const title = GUIDES[lead.guide].title;
     leads.appendRow([
-      now.toISOString(), lead.name, lead.email, title, lead.page, lead.source,
+      now.toISOString(), CONFIG.LEAD_SOURCE, lead.name, lead.email, title, lead.page, lead.source,
       lead.noticeShown, askedBefore_(leads, lead.email, title) ? 'Yes' : '',
     ].map(safeCell_));
   } finally {
@@ -129,7 +135,8 @@ function askedBefore_(sheet, email, title) {
   const last = sheet.getLastRow();
   if (last < 2) return false;
   const count = Math.min(last - 1, 2000);
-  const rows = sheet.getRange(last - count + 1, 2, count, 3).getValues();
+  // Columns C–E: Name, Email, Guide (B is Lead Source).
+  const rows = sheet.getRange(last - count + 1, 3, count, 3).getValues();
   return rows.some(function (row) {
     return String(row[1]).toLowerCase() === email && row[2] === title;
   });
@@ -161,12 +168,12 @@ function safeCell_(value) {
 
 /**
  * Run once from the editor after pasting this file: it asks for the one permission the script
- * needs (this spreadsheet) and writes a test row to "TT Guide Leads". Delete the row afterwards.
+ * needs (Google Sheets) and writes a test row to "TT Guide Leads". Delete the row afterwards.
  */
 function writeTestRow() {
   const now = new Date();
   handle_({
-    form: CONFIG.FORM, guide: 'clarity-before-change', source: 'test', page: '/test/',
+    form: CONFIG.FORM, guide: 'solve-the-right-problem', source: 'test', page: '/test/',
     name: 'Test Reader', email: 'test@example.com', website: '',
     form_ts: String(now.getTime() - 10000), submitted: new Date(now.getTime() - 1000).toISOString(),
     notice_shown: now.toISOString(),
@@ -179,7 +186,7 @@ function testSpamRules() {
   const now = new Date();
   const t = now.getTime();
   const good = {
-    form: CONFIG.FORM, guide: 'clarity-before-change', source: 'popup', page: '/about-us',
+    form: CONFIG.FORM, guide: 'solve-the-right-problem', source: 'popup', page: '/about-us',
     name: 'Jordan Lee', email: 'jordan@example.com', website: '',
     form_ts: String(t - 60000), submitted: new Date(t - 1000).toISOString(),
   };

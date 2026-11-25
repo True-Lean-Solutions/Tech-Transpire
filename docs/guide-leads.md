@@ -10,7 +10,7 @@ The behavior is ported from the True Lean Solutions site (`True-Lean-Solutions/T
 |---|---|---|
 | Guide settings | `site/src/data/guide.ts` | The copy (kicker, title, promise, facts, button), the Insights post the title links to, the PDF's path and download name, the pages where the tab never offers itself |
 | Endpoint | `GUIDE_ENDPOINT` in `site/src/lib/site.ts` | The Apps Script `/exec` URL. **Empty means off:** no tab, no card, no footer link, and no script loaded |
-| PDF | `site/public/guides/clarity-before-change-field-guide.pdf` | Served from the site itself. The card also stays off while this file is missing |
+| PDF | `site/public/guides/solve-the-right-problem-playbook.pdf` (the Tech Transpire playbook "Solve the Right Problem", 18 pages, supplied 2026-11-25) | Served from the site itself. The card also stays off while this file is missing |
 | Tab, card and form | `site/src/components/GuidePrompt.astro` | Markup and styles. Rendered by `site/src/layouts/Base.astro` only while the guide is enabled |
 | Behavior | `site/src/scripts/guide.ts` | The tab, when it nudges, the form, the download, the glass. Re-wired on every page, including client-side navigations |
 | Footer link | `site/src/components/Footer.astro` | "Free field guide" in the legal bar opens the card on any page |
@@ -49,13 +49,13 @@ Contrast was measured from rendered pixels over each case: light sections, the n
 
 ## Switching it on
 
-1. **Put the designed PDF in place:** `site/public/guides/clarity-before-change-field-guide.pdf`. Check that it has no internal notes, and that the card's facts ("4 practical steps", "4 printable worksheets", "A 30-day plan") match it.
+1. **The PDF is in place:** `site/public/guides/solve-the-right-problem-playbook.pdf`, supplied by Hemang on 2026-11-25. The card's title, promise and facts ("5 steps", "5 printable worksheets", "One 30-day plan") match its cover. To replace it, keep the file name, or change `file` in `site/src/data/guide.ts`.
 2. **Add a clause to the Privacy Policy** covering this collection (name and work email for the guide, follow-up email, kept in a Google Sheet). See the open item in D-56.
-3. **Install the script.** Use a Google account that can edit the spreadsheet "TLS LEADS From Website".
-   1. Open that spreadsheet and choose Extensions → Apps Script. This creates a script bound to that spreadsheet.
-   2. Replace the editor's contents with `docs/apps-script/guide-leads.gs`, then save.
+3. **Install the script.** Use a Google account that can edit the spreadsheet "TLS LEADS From Website" (`1dNaI5ntcUzhuaF4FFx5XGKIac5K9SLcuBqVQwdRYqBY`).
+   1. Go to script.google.com → New project, and name it "TT Guide Leads". **Do not use Extensions → Apps Script in the spreadsheet:** that opens the TLS site's own script, and pasting over it would break the TLS guide form.
+   2. Replace the editor's contents with `docs/apps-script/guide-leads.gs`, then save. The script finds the spreadsheet by the ID in `CONFIG.SHEET_ID`.
    3. Run `testSpamRules`. The last log line should read "All spam rules pass". It writes nothing.
-   4. Run `writeTestRow` and approve the one permission it asks for (this spreadsheet). Check that the test row is in the "TT Guide Leads" tab, then delete the row.
+   4. Run `writeTestRow` and approve the permission it asks for (Google Sheets). Check that the test row is in the "TT Guide Leads" tab, then delete the row.
    5. Choose Deploy → New deployment → Web app, with "Execute as: Me" and "Who has access: Anyone". Deploy, then copy the URL ending in `/exec`.
 4. **Set `GUIDE_ENDPOINT`** in `site/src/lib/site.ts` to that URL. Open a pull request, merge it, and deploy the site.
 5. **Test on the live site.** Ask for the guide. The PDF should download and a row should appear in "TT Guide Leads".
@@ -71,7 +71,7 @@ A fire-and-forget `POST` of `URLSearchParams` (never JSON) with these fields:
 | Field | Value |
 |---|---|
 | `form` | `tt-guide` |
-| `guide` | `clarity-before-change` |
+| `guide` | `solve-the-right-problem` |
 | `source` | `popup` |
 | `page` | The page path |
 | `name`, `email` | What the visitor entered |
@@ -82,9 +82,11 @@ A fire-and-forget `POST` of `URLSearchParams` (never JSON) with these fields:
 
 ## What the sheet records
 
-**TT Guide Leads:** Submitted At (UTC), Name, Email (lower case), Guide, Page, Source, Notice Shown At (UTC), and Asked Before ("Yes" when the same address already asked for this guide).
+**TT Guide Leads:** Submitted At (UTC), Lead Source, Name, Email (lower case), Guide, Page, Opened From, Notice Shown At (UTC), and Asked Before ("Yes" when the same address already asked for this guide).
 
-**TT Guide Leads Rejected:** posts the script treated as spam, with the reason:
+**Lead Source** is always "Tech Transpire website (techtranspire.com)" (`CONFIG.LEAD_SOURCE`). The spreadsheet is shared with the True Lean Solutions website, so every row says which site it came from. **Opened From** is how the card was opened (`popup`).
+
+**TT Guide Leads Rejected:** posts the script treated as spam, with the Lead Source and the reason:
 
 | Reason | Meaning |
 |---|---|
